@@ -11,3 +11,7 @@ hydra:
 data_reader:
   redcap_database: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/L1958Narco_DATA_2024-01-26_1047.csv"
   output_dir: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/dataframes"
+
+data_sorter:
+  input_file: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/dataframes/complete_dataframe.csv"
+  output_dir: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/dataframes"

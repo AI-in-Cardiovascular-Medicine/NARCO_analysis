@@ -2,6 +2,7 @@ import os
 import pandas as pd
 from loguru import logger
 
+
 def read_data(config):
     """
     Read original csv file, keep original baseline data and save it as a new csv to build
@@ -17,38 +18,48 @@ def read_data(config):
     # structure is built by redcap_event_name baseline_arm_1 and redcap_repeat_instance is missing
     blueprint = data[(data['redcap_event_name'] == 'baseline_arm_1') & (data['redcap_repeat_instrument'].isnull())]
 
-    blueprint = ccta_data(data, blueprint)
-    blueprint = diagnostics_data(data, blueprint)
-    blueprint = invasive_data(data, blueprint)
-    blueprint = cmr_data(data, blueprint)
+    list_bl = ['diagnostic_exams', 'ccta', 'invasive_testing', 'cmr']
+    for i in list_bl:
+        blueprint = baseline_arm_1(data, blueprint, redcap_repeat_instrument=i)
+    list_fu = ['1_year_follow_up_arm_1', '3_year_follow_up_arm_1', '5_year_follow_up_arm_1', 'other_follow_up_arm_1']
+    blueprint = surgery_arm_1(data, blueprint)
     blueprint = adverse_events(data, blueprint)
-    # blueprint = follow_up_1y(data, blueprint)
+    for i in list_fu:
+        blueprint = follow_up(data, blueprint, event_name=i)
 
     blueprint.to_csv(os.path.join(config.data_reader.output_dir, 'complete_dataframe.csv'), index=False)
 
     return data
 
 
-def ccta_data(data, dataframe):
-    ccta = data[(data['redcap_event_name'] == 'baseline_arm_1') & (data['redcap_repeat_instrument'] == 'ccta')]
+def baseline_arm_1(data, dataframe, redcap_repeat_instrument=None):
+    bl = data[
+        (data['redcap_event_name'] == 'baseline_arm_1') & (data['redcap_repeat_instrument'] == redcap_repeat_instrument)
+    ]
+    
+    dict_bl = {'diagnostic_exams': 'dgn_', 'ccta': 'ccta_', 'invasive_testing': 'inv_', 'cmr': 'cmr_'}
 
-    ccta_postop = data[data['redcap_event_name'] == 'surgery_arm_1']
+    bl_columns = [col for col in bl.columns if col.startswith(dict_bl[redcap_repeat_instrument])]
 
-    # make a list with all columns that start with ccta_ in ccta dataframe
-    ccta_columns = [col for col in ccta.columns if col.startswith('ccta_')]
-
-    for i, row in ccta.iterrows():
-        for col in ccta_columns:
-            if ccta['redcap_repeat_instance'][i] == 1:
+    for i, row in bl.iterrows():
+        for col in bl_columns:
+            if bl['redcap_repeat_instance'][i] == 1:
                 dataframe.loc[dataframe['record_id'] == row['record_id'], col] = row[col]
-            elif ccta['redcap_repeat_instance'][i] > 1:
+            elif bl['redcap_repeat_instance'][i] > 1:
                 dataframe.loc[
                     dataframe['record_id'] == row['record_id'], col + '_' + str(int(row['redcap_repeat_instance']))
                 ] = row[col]
 
-    ccta_postop_columns = [col for col in ccta_postop.columns if col.startswith(('ccta_', 'surgery_'))]
-    for i, row in ccta_postop.iterrows():
-        for col in ccta_postop_columns:
+    return dataframe
+
+
+def surgery_arm_1(data, dataframe):
+    surgery = data[(data['redcap_event_name'] == 'surgery_arm_1')]
+
+    surgery_columns = [col for col in surgery.columns if col.startswith(('surgery_', 'ccta_'))]
+
+    for i, row in surgery.iterrows():
+        for col in surgery_columns:
             if col.startswith('ccta_'):
                 dataframe.loc[dataframe['record_id'] == row['record_id'], col + '_postop'] = row[col]
             elif col.startswith('surgery_'):
@@ -56,61 +67,10 @@ def ccta_data(data, dataframe):
 
     return dataframe
 
-def diagnostics_data(data, dataframe):
-    dgn = data[(data['redcap_event_name'] == 'baseline_arm_1') & (data['redcap_repeat_instrument'] == 'diagnostic_exams')]
-
-    # make a list with all columns that start with ccta_ in ccta dataframe
-    dgn_columns = [col for col in dgn.columns if col.startswith('dgn_')]
-
-    for i, row in dgn.iterrows():
-        for col in dgn_columns:
-            if dgn['redcap_repeat_instance'][i] == 1:
-                dataframe.loc[dataframe['record_id'] == row['record_id'], col] = row[col]
-            elif dgn['redcap_repeat_instance'][i] > 1:
-                dataframe.loc[
-                    dataframe['record_id'] == row['record_id'], col + '_' + str(int(row['redcap_repeat_instance']))
-                ] = row[col]
-
-    return dataframe
-
-def invasive_data(data, dataframe):
-    inv = data[(data['redcap_event_name'] == 'baseline_arm_1') & (data['redcap_repeat_instrument'] == 'invasive_testing')]
-
-    # make a list with all columns that start with ccta_ in ccta dataframe
-    inv_columns = [col for col in inv.columns if col.startswith('inv_')]
-
-    for i, row in inv.iterrows():
-        for col in inv_columns:
-            if inv['redcap_repeat_instance'][i] == 1:
-                dataframe.loc[dataframe['record_id'] == row['record_id'], col] = row[col]
-            elif inv['redcap_repeat_instance'][i] > 1:
-                dataframe.loc[
-                    dataframe['record_id'] == row['record_id'], col + '_' + str(int(row['redcap_repeat_instance']))
-                ] = row[col]
-
-    return dataframe
-
-def cmr_data(data, dataframe):
-    cmr = data[(data['redcap_event_name'] == 'baseline_arm_1') & (data['redcap_repeat_instrument'] == 'cmr')]
-
-    # make a list with all columns that start with ccta_ in ccta dataframe
-    cmr_columns = [col for col in cmr.columns if col.startswith('cmr_')]
-
-    for i, row in cmr.iterrows():
-        for col in cmr_columns:
-            if cmr['redcap_repeat_instance'][i] == 1:
-                dataframe.loc[dataframe['record_id'] == row['record_id'], col] = row[col]
-            elif cmr['redcap_repeat_instance'][i] > 1:
-                dataframe.loc[
-                    dataframe['record_id'] == row['record_id'], col + '_' + str(int(row['redcap_repeat_instance']))
-                ] = row[col]
-
-    return dataframe
 
 def adverse_events(data, dataframe):
     ae = data[(data['redcap_event_name'] == 'adverse_event_arm_1')]
 
-    # make a list with all columns that start with ccta_ in ccta dataframe
     ae_columns = [col for col in ae.columns if col.startswith('ae_')]
 
     for i, row in ae.iterrows():
@@ -124,16 +84,91 @@ def adverse_events(data, dataframe):
 
     return dataframe
 
-# def follow_up_1y(data, dataframe):
-#     fu1 = data[(data['redcap_event_name'] == '1_year_follow_up_arm_1')]
 
-#     # Iterate through columns of fu1
-#     for col in fu1.columns:
-#         # Check if the column is not empty
-#         if not fu1[col].isnull().all():
-#             # Add non-empty columns with the suffix '_fu1' to the dataframe
-#             new_col_name = col + '_fu1'
-#             dataframe[new_col_name] = fu1[col]
+def follow_up(data, dataframe, redcap_event_name = None):
+    fu = data[(data['redcap_event_name'] == redcap_event_name)]
+    fu_columns = [
+        'pf_date_fu',
+        'pf_days_fu',
+        'pf_assessment_fu',
+        'pf_funotes',
+        'planned_followup_complete',
+        'sym_caa_fu',
+        'sym_op_fu',
+        'sym_op_postopsym_fu___0',
+        'sym_op_postopsym_fu___1',
+        'sym_op_postopsym_fu___2',
+        'sym_op_postopsym_fu___3',
+        'sym_fu___0',
+        'sym_fu___1',
+        'sym_fu___2',
+        'sym_fu___3',
+        'sym_fu___4',
+        'sym_fu___5',
+        'sym_fu___6',
+        'sym_fu___7',
+        'sym_fu___8',
+        'sym_fu___9',
+        'sym_fu___10',
+        'sym_fu___11',
+        'sym_fu___12',
+        'sym_other_fu',
+        'sym_ap_fu',
+        'sym_ap_ccs_fu',
+        'sym_ap_stress_fu',
+        'sym_sync_exercise_fu',
+        'sym_sync_stress_fu',
+        'sym_dysp_nyha_fu',
+        'sym_div_exercise_fu',
+        'sym_bp_measure',
+        'sym_bp_change_fu',
+        'sym_bp_fu',
+        'sym_hr_fu',
+        'sym_hemodyn_patientreport',
+        'sym_comments',
+        'symptoms_follow_up_complete',
+        'sports_recom_fu',
+        'sports_recom_type_fu',
+        'sports_recom_yn_fu',
+        'sports_yn_fu',
+        'sports_level_fu',
+        'sports_type_fu',
+        'sports_static_component_fu',
+        'sports_dynamic_component_fu',
+        'sports_hours_fu',
+        'sports_years_fu',
+        'sports_competitions_fu',
+        'sports_work_fu',
+        'sports_work_hours_fu',
+        'sports_symptoms_fu',
+        'sports_symp_type_fu___0',
+        'sports_symp_type_fu___1',
+        'sports_symp_type_fu___2',
+        'sports_symp_type_fu___3',
+        'sports_symp_type_fu___4',
+        'sports_symp_other_fu',
+        'sports_symp_specific_fu',
+        'sports_behaviour_follow_up_complete',
+    ]
 
-#     return dataframe
+    fu_funct_columns = [col for col in fu.columns if col.startswith('funct_')]
 
+    for i, row in fu.iterrows():
+        for col in fu_columns:
+            if fu['redcap_repeat_instance'][i] == 1:
+                dataframe.loc[dataframe['record_id'] == row['record_id'], col] = row[col]
+            elif fu['redcap_repeat_instance'][i] > 1:
+                dataframe.loc[
+                    dataframe['record_id'] == row['record_id'], col + '_' + str(int(row['redcap_repeat_instance']))
+                ] = row[col]
+
+    for i, row in fu.iterrows():
+        for col in fu_funct_columns:
+            if fu['redcap_repeat_instance'][i] == 1:
+                dataframe.loc[dataframe['record_id'] == row['record_id'], col] = row[col]
+            elif fu['redcap_repeat_instance'][i] > 1:
+                dataframe.loc[
+                    dataframe['record_id'] == row['record_id'], col + '_fu_' + str(int(row['redcap_repeat_instance']))
+                ] = row[col]
+
+    return dataframe

@@ -9,5 +9,5 @@
 ## Usage
 After the config file is set up properly, you can run the application using:
 ```
-python main.py
+    python main.py
 ```
