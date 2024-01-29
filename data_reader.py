@@ -25,7 +25,7 @@ def read_data(config):
     blueprint = surgery_arm_1(data, blueprint)
     blueprint = adverse_events(data, blueprint)
     for i in list_fu:
-        blueprint = follow_up(data, blueprint, event_name=i)
+        blueprint = follow_up(data, blueprint, redcap_event_name=i)
 
     blueprint.to_csv(os.path.join(config.data_reader.output_dir, 'complete_dataframe.csv'), index=False)
 
