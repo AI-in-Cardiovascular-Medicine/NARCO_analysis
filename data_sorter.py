@@ -1,16 +1,23 @@
-import os
-import pandas as pd
 import matplotlib.pyplot as plt
-import loguru as logger
+from loguru import logger
 
-def plotter(config):
-    data = pd.read_csv(config.data_sorter.input_file)
+
+def plotter(data):
     plot_events(data)
     return data
 
+
 def plot_events(data):
     # identify all columns with type datetime
-    date_columns = [col for col in data.columns if data[col].dtype == 'datetime64[ns]']
-    print(date_columns)
-    return date_columns
-    
+    events_to_plot = [col for col in data.columns if 'date' in col]
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    for patient_id in [1]:
+        data_to_plot = data[data['record_id'] == patient_id].transpose()
+        plt.axhline(y=0, xmin=data_to_plot.min(), xmax=data_to_plot.max(), color='r', linestyle='--')
+        # plot the dates on the line
+        plt.axvline(x=data_to_plot.min(), ymin=-1, ymax=1, color='r', linestyle='--')
+
+    plt.show()
+
+    return events_to_plot
