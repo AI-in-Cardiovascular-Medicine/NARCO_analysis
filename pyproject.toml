@@ -13,6 +13,7 @@ omegaconf = "*"
 numpy = "1.24.3"
 scipy = "*"
 pandas = "*"
+openpyxl = "*"
 matplotlib = "*"
 
 [tool.poetry.group.dev.dependencies]
