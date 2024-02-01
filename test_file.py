@@ -46,15 +46,16 @@ dict_inv = {key: (value if value != '' else None) for key, value in dict_inv.ite
 test = final[final['record_id'].isin([1, 2, 6, 10, 13, 14, 15, 32, 41, 58, 66, 68])]
 test = test[[col for col in test.columns if col.startswith(('record_', 'inv_'))]]
 
-print(test)
-print(dict_inv)
+# print(inv)
+# for i, row in test.iterrows():
+#     if row['record_id'] in dict_inv.keys() and dict_inv[row['record_id']] is not None:
+#         suffix = dict_inv[row['record_id']]
+#         # replace all columns starting with 'inv_' in self.baselin with all columns in inv starting with 'inv_' and ending with value from dict_inv
+#         for col in test.columns:
+#             if col.startswith('inv_'):
+#                 test.loc[i, col] = inv.loc[i, str(col + dict_inv.values())]
 
-for i, row in test.iterrows():
-    if row['record_id'] in dict_inv.keys() and dict_inv[row['record_id']] is not None:
-        suffix = dict_inv[row['record_id']]
-        # replace all columns starting with 'inv_' in self.baselin with all columns in inv starting with 'inv_' and ending with value from dict_inv
-        for col in test.columns:
-            if col.startswith('inv_'):
-                test.loc[i, col] = inv.loc[i, str(col + dict_inv.values())]
+# print(inv)
 
-print(test)
+# print all columns starting with caa_ in final
+print([col for col in final.columns if col.startswith('caa_')])

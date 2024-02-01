@@ -28,7 +28,7 @@ class AnalysisDfs:
 
         return data
 
-    def correct_baseline(self):
+    def correct_baseline_inv(self):
         inv = self.data[[col for col in self.data.columns if col.startswith(('record_id', 'inv_'))]]
 
         # for keys insert all record_ids from self.data
@@ -45,7 +45,7 @@ class AnalysisDfs:
                     continue
             else:
                 values.append(None)
-        
+
         dict_inv = dict(zip(keys, values))
 
         for key, value in dict_inv.items():
@@ -53,7 +53,7 @@ class AnalysisDfs:
                 dict_inv[key] = value.replace('inv_protocol___2', '')
 
         dict_inv = {key: (value if value != '' else None) for key, value in dict_inv.items()}
-        
+
         for i, row in self.baseline.iterrows():
             if row['record_id'] in dict_inv.keys() and dict_inv[row['record_id']] is not None:
                 # replace all columns starting with 'inv_' in self.baselin with all columns in inv starting with 'inv_' and ending with value from dict_inv
@@ -61,18 +61,64 @@ class AnalysisDfs:
                     if col.startswith('inv_'):
                         self.baseline.loc[i, col] = inv.loc[i, str(col + dict_inv.values(1))]
 
+    def correct_bl_hrf(self, config):
+        # mutate all high-risk caa_columns based on config file
+        caa_columns = ['caa_origin___0', 'caa_origin___1', 'caa_origin___2', 'caa_origin___3', 'caa_origin___4']
+
+        for i, row in self.baseline.iterrows():
+            if row[caa_columns].any() == 1:
+                if row['caa_origin___0'] == 1:
+                    self.process_caa_origin(row, i, 'ccta_stj_rca', 'caa_high_coronary___0', config)
+                elif row['caa_origin___1'] == 1 or row['caa_origin___2'] == 1:
+                    self.process_caa_origin(row, i, 'ccta_stj_lca', 'caa_high_coronary___1', config)
+
+                if (
+                    row['ccta_ostial_elliptic'] > config.first_analysis.slit_like_ostium_ratio
+                    and row['ccta_ostial_a'] / row['ccta_dist_a'] <= config.first_analysis.percent_stenosis
+                ):
+                    self.baseline.loc[i, 'caa_ostial_elliptic'] = 1
+                else:
+                    self.baseline.loc[i, 'caa_ostial_elliptic'] = 0
+
+                if row['ccta_ostial_elliptic'] > config.elliptic_ratio:
+                    self.baseline.loc[i, 'caa_ostial_elliptic'] = 1
+                else:
+                    self.baseline.loc[i, 'caa_ostial_elliptic'] = 0
+
+                if row['ccta_mla_a'] / row['ccta_dist_a'] <= config.first_analysis.percent_stenosis:
+                    self.baseline.loc[i, 'caa_pn'] = 1
+                else:
+                    self.baseline.loc[i, 'caa_pn'] = 0
+
+                if row['ccta_aa_degree'] < config.first_analysis.acute_take_off:
+                    self.baseline.loc[i, 'caa_angle'] = 1
+                else:
+                    self.baseline.loc[i, 'caa_angle'] = 0
+
+                if row['ccta_imc_length'] >= config.first_analysis.imc_length_cutoff:
+                    self.baseline.loc[i, 'caa_im'] = 1
+                else:
+                    self.baseline.loc[i, 'caa_im'] = 0
+
+                if (
+                    row['caa_im'] == 1
+                    and row['ccta_mla_c'] / row['ccta_dist_c'] <= config.first_analysis.percent_stenosis
+                ):
+                    self.baseline.loc[i, 'caa_hypoplasia'] = 1
+                else:
+                    self.baseline.loc[i, 'caa_hypoplasia'] = 0
+
+    def process_caa_origin(self, row, i, stenosis_column, high_coronary_column, config):
+        if row[stenosis_column] >= 10:
+            self.baseline.loc[i, 'caa_high'] = 1
+            self.baseline.loc[i, high_coronary_column] = 1
+        else:
+            self.baseline.loc[i, 'caa_high'] = 0
+            self.baseline.loc[i, high_coronary_column] = 0
 
     def keep_fu_columns(self):
         pass
 
 
-def read_longitudinal_data(config):
-    data = pd.read_csv(config.first_analysis.input_file)
-
-
-def keep_fu_columns(data):
-    pass
-
-
-def find_events(data):
-    pass
+    def find_events(data):
+        pass
