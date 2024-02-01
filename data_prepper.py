@@ -11,8 +11,8 @@ class DataPrepper:
 
 
     def __call__(self):
-        self.data = pd.read_csv(self.config.data_reader.redcap_database)
-        date_columns = [col for col in self.data.columns if 'date' in col or 'year' in col]
+        self.data = pd.read_csv(self.config.data_prepper.redcap_database)
+        date_columns = [col for col in self.data.columns if 'date' in col or 'patient_year' in col]
         self.data[date_columns] = self.data[date_columns].apply(pd.to_datetime, format=r'%Y-%m-%d', errors='coerce')
 
         # structure is built by redcap_event_name baseline_arm_1 and redcap_repeat_instance is missing
@@ -33,8 +33,8 @@ class DataPrepper:
         for i in list_fu:
             self.follow_up(redcap_event_name=i)
 
-        self.blueprint.to_csv(os.path.join(self.config.data_reader.output_dir, 'complete_dataframe.csv'), index=False)
-        self.blueprint.to_excel(os.path.join(self.config.data_reader.output_dir, 'complete_dataframe.xlsx'), index=False)
+        self.blueprint.to_csv(os.path.join(self.config.data_prepper.output_dir, 'complete_dataframe.csv'), index=False)
+        self.blueprint.to_excel(os.path.join(self.config.data_prepper.output_dir, 'complete_dataframe.xlsx'), index=False)
 
         return self.blueprint
 
@@ -81,8 +81,8 @@ class DataPrepper:
         self.add_columns(fu, fu_columns, '_' + decorator, treat_1_different)
         self.add_columns(fu, fu_funct_columns, '_fu_' + decorator, treat_1_different)
 
-    def add_columns(self, columns, suffix_separator, treat_1_different=True):
-        for i, row in self.data.iterrows():
+    def add_columns(self, data, columns, suffix_separator, treat_1_different=True):
+        for i, row in data.iterrows():
             for col in columns:
                 if treat_1_different and self.data['redcap_repeat_instance'][i] == 1:
                     self.blueprint.loc[self.blueprint['record_id'] == row['record_id'], col] = row[col]
@@ -91,3 +91,4 @@ class DataPrepper:
                         self.blueprint['record_id'] == row['record_id'],
                         col + suffix_separator + str(int(row['redcap_repeat_instance'])),
                     ] = row[col]
+

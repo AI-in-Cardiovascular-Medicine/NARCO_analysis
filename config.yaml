@@ -9,11 +9,20 @@ hydra:
     dir: .
 
 data_prepper:
-  active: False
+  active: True
   redcap_database: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/L1958Narco_DATA_2024-01-31_1014.csv"
   output_dir: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/dataframes"
 
 data_sorter:
-  active: True
+  active: False
   input_file: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/dataframes/complete_dataframe.csv"
   output_dir: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/dataframes"
+
+first_analysis:
+  input_file: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/dataframes/complete_dataframe.csv"
+  output_dir: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/dataframes"
+  acute_take_off_angle: 45
+  slit_like_ostium_ratio: 2.5
+  percent_stenosis: 0.5
+  elliptic_ratio: 1.3
+  percent_hypoplasia: 0.5

@@ -15,7 +15,8 @@ def data_preparation(config: DictConfig) -> None:
     else:
         data = pd.read_csv(config.data_sorter.input_file)
     if config.data_sorter.active:
-        _ = plotter(data)
+        # _ = plotter(data)
+        pass
 
 if __name__ == '__main__':
     data_preparation()
