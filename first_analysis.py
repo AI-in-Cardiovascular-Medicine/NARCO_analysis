@@ -1,3 +1,5 @@
+import os
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -12,8 +14,14 @@ class AnalysisDfs:
         self.data = pd.read_csv(self.config.first_analysis.input_file)
         self.baseline = self.keep_bl_columns()
         self.follow_up = self.keep_fu_columns()
+        self.baseline = self.correct_bl_hrf(self.config)
 
-        return self.data
+        self.baseline.to_csv(os.path.join(self.config.first_analysis.output_dir, 'baseline.csv'), index=False)
+        self.blueprint.to_excel(
+            os.path.join(self.config.first_analysis.output_dir, 'follow_up.xlsx'), index=False
+        )
+
+        return self.baseline, self.follow_up
 
     def keep_bl_columns(self):
         # keep all columns that don't have suffix _(any number)
@@ -28,13 +36,30 @@ class AnalysisDfs:
         data = data.drop(columns=cols_to_exclude)
 
         endings_to_include = [
-            'type___\d+', 'fhx___\d+', 'phxs___\d+', 'component_\d+', 'origin___\d+',
-            'course___\d+', 'coronary___\d+', 'diagtool___\d+', 'loc___\d+',
-            'morph___\d+', 'other___\d+', 'aha___\d+', 'protocol___\d+', 'severe___\d+',
-            'init___\d+', 'final___\d+', 'fail___\d+', 'aaoca___\d+', 'stent___\d+'
+            'type___\d+',
+            'fhx___\d+',
+            'phxs___\d+',
+            'component_\d+',
+            'origin___\d+',
+            'course___\d+',
+            'coronary___\d+',
+            'diagtool___\d+',
+            'loc___\d+',
+            'morph___\d+',
+            'other___\d+',
+            'aha___\d+',
+            'protocol___\d+',
+            'severe___\d+',
+            'init___\d+',
+            'final___\d+',
+            'fail___\d+',
+            'aaoca___\d+',
+            'stent___\d+',
         ]
 
-        additional_columns_to_include = self.data.filter(regex='(?:' + '|'.join(endings_to_include) + ')$').columns.tolist()
+        additional_columns_to_include = self.data.filter(
+            regex='(?:' + '|'.join(endings_to_include) + ')$'
+        ).columns.tolist()
 
         # Add additional columns to the filtered DataFrame
         data = pd.concat([data, self.data[additional_columns_to_include]], axis=1)
@@ -71,11 +96,11 @@ class AnalysisDfs:
                 for col in self.baseline.columns:
                     if col.startswith('inv_'):
                         self.baseline.loc[i, col] = inv.loc[i, str(col + dict_inv.values(1))]
-    
+
     def keep_fu_columns(self):
         # keep all columns from self.data that are not in self.baseline plus 'record_id'
         columns_to_keep = ~self.data.columns.isin(self.baseline.columns) | (self.data.columns == 'record_id')
-        self.data.loc[:, columns_to_keep]
+        return self.data.loc[:, columns_to_keep]
 
     def correct_bl_hrf(self, config):
         # mutate all high-risk caa_columns based on config file
@@ -131,10 +156,6 @@ class AnalysisDfs:
         else:
             self.baseline.loc[i, 'caa_high'] = 0
             self.baseline.loc[i, high_coronary_column] = 0
-
-    def keep_fu_columns(self):
-        pass
-
 
     def find_events(data):
         pass
