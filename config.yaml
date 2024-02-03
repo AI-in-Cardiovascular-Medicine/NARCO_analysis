@@ -20,7 +20,7 @@ data_sorter:
 
 first_analysis:
   active: True
-  input_file: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/dataframes/complete_dataframe.csv"
+  input_file: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/dataframes/complete_dataframe.xlsx"
   output_dir: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/dataframes"
   
   high_take_off: 10

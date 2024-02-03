@@ -11,15 +11,14 @@ class AnalysisDfs:
         self.config = config
 
     def __call__(self):
-        self.data = pd.read_csv(self.config.first_analysis.input_file)
+        self.data = pd.read_excel(self.config.first_analysis.input_file)
         self.baseline = self.keep_bl_columns()
         self.follow_up = self.keep_fu_columns()
+        self.baseline = self.correct_baseline_inv()
         self.baseline = self.correct_bl_hrf(self.config)
 
         self.baseline.to_csv(os.path.join(self.config.first_analysis.output_dir, 'baseline.csv'), index=False)
-        self.blueprint.to_excel(
-            os.path.join(self.config.first_analysis.output_dir, 'follow_up.xlsx'), index=False
-        )
+        self.blueprint.to_excel(os.path.join(self.config.first_analysis.output_dir, 'follow_up.xlsx'), index=False)
 
         return self.baseline, self.follow_up
 
@@ -27,6 +26,7 @@ class AnalysisDfs:
         # keep all columns that don't have suffix _(any number)
         data = self.data.filter(regex='^(?!.*(_1|\_\d+)$)(?!.*(_\d+)$)(?!.*(___\\d+)$).*$')
 
+        # all follow up only columns
         cols_to_exclude = [
             col
             for col in data.columns
@@ -35,6 +35,7 @@ class AnalysisDfs:
 
         data = data.drop(columns=cols_to_exclude)
 
+        # hardcoded exception that are faultily excluded by regex
         endings_to_include = [
             'type___\d+',
             'fhx___\d+',
@@ -61,46 +62,51 @@ class AnalysisDfs:
             regex='(?:' + '|'.join(endings_to_include) + ')$'
         ).columns.tolist()
 
-        # Add additional columns to the filtered DataFrame
         data = pd.concat([data, self.data[additional_columns_to_include]], axis=1)
 
     def correct_baseline_inv(self):
         inv = self.data[[col for col in self.data.columns if col.startswith(('record_id', 'inv_'))]]
 
-        # for keys insert all record_ids from self.data
-        keys = range(1, len(self.data) + 1)
+        rows = inv['record_id'].tolist()
+        suffix = []
 
-        values = []
         # for all rows in dataframe find the column starting with 'inv_protocol___2' that is equal to 1, if none is equal to 1 append None
         for i, row in inv.iterrows():
             for col in inv.columns:
                 if col.startswith('inv_protocol___2') and row[col] == 1:
-                    values.append(col)
+                    suffix.append(col.replace('inv_protocol___2', ''))
                     break
                 elif col.startswith('inv_protocol___2') and row[col] == 0:
                     continue
             else:
-                values.append(None)
+                suffix.append(None)
 
-        dict_inv = dict(zip(keys, values))
+        suffix = [None if s == '' else s for s in suffix]
 
-        for key, value in dict_inv.items():
-            if value is not None:
-                dict_inv[key] = value.replace('inv_protocol___2', '')
+        list_inv = list(zip(rows, suffix))
+        columns_to_replace = [col for col in self.baseline.columns if col.startswith('inv_')]
 
-        dict_inv = {key: (value if value != '' else None) for key, value in dict_inv.items()}
-
-        for i, row in self.baseline.iterrows():
-            if row['record_id'] in dict_inv.keys() and dict_inv[row['record_id']] is not None:
-                # replace all columns starting with 'inv_' in self.baselin with all columns in inv starting with 'inv_' and ending with value from dict_inv
-                for col in self.baseline.columns:
-                    if col.startswith('inv_'):
-                        self.baseline.loc[i, col] = inv.loc[i, str(col + dict_inv.values(1))]
+        for record_id, s in list_inv:
+            if s is not None:
+                columns_from_inv = [
+                    col
+                    for col in inv.columns
+                    if col.startswith('inv_') and col.endswith(s) and not col.endswith(str('__' + s))
+                ]
+                list_replace = list(zip(columns_to_replace, columns_from_inv))
+                print(list_replace[0])
+                for col_to_replace, col_from_inv in zip(columns_to_replace, columns_from_inv):
+                    # Match 'record_id' and replace columns
+                    self.baseline.loc[self.baseline['record_id'] == record_id, col_to_replace] = inv.loc[
+                        inv['record_id'] == record_id, col_from_inv
+                    ].values
 
     def keep_fu_columns(self):
         # keep all columns from self.data that are not in self.baseline plus 'record_id'
         columns_to_keep = ~self.data.columns.isin(self.baseline.columns) | (self.data.columns == 'record_id')
-        return self.data.loc[:, columns_to_keep]
+        follow_up = self.data.loc[:, columns_to_keep]
+
+        return follow_up
 
     def correct_bl_hrf(self, config):
         # mutate all high-risk caa_columns based on config file
@@ -150,6 +156,7 @@ class AnalysisDfs:
                     self.baseline.loc[i, 'caa_hypoplasia'] = 0
 
     def process_caa_origin(self, row, i, stenosis_column, high_coronary_column, config):
+        """Helper function for correct_bl_hrf"""
         if row[stenosis_column] >= 10:
             self.baseline.loc[i, 'caa_high'] = 1
             self.baseline.loc[i, high_coronary_column] = 1
