@@ -5,6 +5,7 @@ import warnings
 warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 warnings.simplefilter(action='ignore', category=FutureWarning)
 from loguru import logger
+from tqdm import tqdm
 
 
 class DataPrepper:
@@ -25,7 +26,7 @@ class DataPrepper:
             (self.data['redcap_event_name'] == 'baseline_arm_1') & (self.data['redcap_repeat_instrument'].isnull())
         ]
 
-        for instrument in self.dict_bl.keys():
+        for instrument in tqdm(self.dict_bl.keys()):
             self.baseline_arm_1(redcap_repeat_instrument=instrument)
         self.surgery_arm_1()
         self.adverse_events()
@@ -35,7 +36,7 @@ class DataPrepper:
             '5_year_follow_up_arm_1',
             'other_follow_up_arm_1',
         ]
-        for i in list_fu:
+        for i in tqdm(list_fu):
             self.follow_up(redcap_event_name=i)
 
         # self.blueprint.to_csv(os.path.join(self.config.data_prepper.output_dir, 'complete_dataframe.csv'), index=False)

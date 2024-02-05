@@ -27,8 +27,8 @@ class AnalysisDfs:
 
     def keep_bl_columns(self):
         # keep all columns that don't have suffix _(any number)
-        data = self.data.filter(regex='^(?!.*(_1|\_\d+)$)(?!.*(_\d+)$)(?!.*(___\\d+)$).*$')
-
+        data = self.data.filter(regex=r'^(?!.*(_1|\_\d+)$)(?!.*(_\d+)$)(?!.*(___\\d+)$).*$')
+        data = data.filter(regex = r'^(?!.*_y\d+$)')
         # all follow up only columns
         cols_to_exclude = [
             col

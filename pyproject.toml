@@ -15,6 +15,7 @@ scipy = "*"
 pandas = "*"
 openpyxl = "*"
 matplotlib = "*"
+tqdm = "*"
 
 [tool.poetry.group.dev.dependencies]
 autohooks = "^23.1.0"
