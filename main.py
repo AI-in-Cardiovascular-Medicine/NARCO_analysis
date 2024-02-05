@@ -13,8 +13,7 @@ def data_preparation(config: DictConfig) -> None:
     if config.data_prepper.active:
         data_prepper = DataPrepper(config)  # init class
         data = data_prepper()  # call class
-    else:
-        data = pd.read_csv(config.data_sorter.input_file)
+
     if config.data_sorter.active:
         # _ = plotter(data)
         pass

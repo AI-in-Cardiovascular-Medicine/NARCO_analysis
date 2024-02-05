@@ -1,14 +1,19 @@
 import os
-from typing import Any
 import pandas as pd
+pd.options.mode.chained_assignment = None  # default='warn'
+import warnings
+warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
+warnings.simplefilter(action='ignore', category=FutureWarning)
 from loguru import logger
 
 
 class DataPrepper:
+    """Creates a longitudinal dataset, by adding repeat_instance columns with a suffix _+ number of repeat instance, 
+    and further translating the different arms also to longitudinal format"""
+
     def __init__(self, config):
         self.config = config
         self.dict_bl = {'diagnostic_exams': 'dgn_', 'ccta': 'ccta_', 'invasive_testing': 'inv_', 'cmr': 'cmr_'}
-
 
     def __call__(self):
         self.data = pd.read_csv(self.config.data_prepper.redcap_database)
@@ -33,8 +38,10 @@ class DataPrepper:
         for i in list_fu:
             self.follow_up(redcap_event_name=i)
 
-        self.blueprint.to_csv(os.path.join(self.config.data_prepper.output_dir, 'complete_dataframe.csv'), index=False)
-        self.blueprint.to_excel(os.path.join(self.config.data_prepper.output_dir, 'complete_dataframe.xlsx'), index=False)
+        # self.blueprint.to_csv(os.path.join(self.config.data_prepper.output_dir, 'complete_dataframe.csv'), index=False)
+        self.blueprint.to_excel(
+            os.path.join(self.config.data_prepper.output_dir, 'complete_dataframe.xlsx'), index=False
+        )
 
         return self.blueprint
 
@@ -72,7 +79,7 @@ class DataPrepper:
             decorator = 'y'
             treat_1_different = True
         else:
-            decorator = 'other_year_'
+            decorator = 'other_y'
             treat_1_different = False
 
         fu_columns = [col for col in fu.columns if 'fu' in col and not col.startswith('funct_')]
@@ -84,11 +91,10 @@ class DataPrepper:
     def add_columns(self, data, columns, suffix_separator, treat_1_different=True):
         for i, row in data.iterrows():
             for col in columns:
-                if treat_1_different and self.data['redcap_repeat_instance'][i] == 1:
+                if treat_1_different and data['redcap_repeat_instance'][i] == 1:
                     self.blueprint.loc[self.blueprint['record_id'] == row['record_id'], col] = row[col]
-                elif not treat_1_different or self.data['redcap_repeat_instance'][i] > 1:
+                else:
                     self.blueprint.loc[
                         self.blueprint['record_id'] == row['record_id'],
                         col + suffix_separator + str(int(row['redcap_repeat_instance'])),
                     ] = row[col]
-
