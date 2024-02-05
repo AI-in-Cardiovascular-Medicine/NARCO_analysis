@@ -1,7 +1,6 @@
 import os
 
 import pandas as pd
-import matplotlib.pyplot as plt
 from loguru import logger
 
 
@@ -108,7 +107,12 @@ class AnalysisDfs:
 
     def keep_fu_columns(self):
         # keep all columns from self.data that are not in self.baseline plus 'record_id'
-        columns_to_keep = ~self.data.columns.isin(self.baseline.columns) | (self.data.columns == 'record_id')
+        columns_surgery = [col for col in self.data.columns if col.startswith('surgery_')]
+        columns_to_keep = (
+            ~self.data.columns.isin(self.baseline.columns)
+            | (self.data.columns == 'record_id')
+            | self.data.columns.isin(columns_surgery)
+        )
         follow_up = self.data.loc[:, columns_to_keep]
 
         return follow_up
@@ -178,7 +182,7 @@ class AnalysisDfs:
         fu_cols = [col for col in fu_cols if col.startswith('pf_years')]
         fu_cols = fu_cols[::-1]
         mace_type_cols = [col for col in self.follow_up.columns if col.startswith('ae_mace_type')]
-        
+
         for i, row in self.follow_up.iterrows():
             mace_type_years = {mace_type: [] for mace_type in self.mace_dict.keys()}
             fu_years = None
@@ -219,3 +223,5 @@ class AnalysisDfs:
 
             self.follow_up.loc[i, 'timeto_censor_y'] = global_censor
             self.follow_up.loc[i, 'mace'] = int(global_mace)
+        
+        
