@@ -9,8 +9,8 @@ hydra:
     dir: .
 
 data_prepper:
-  active: False
-  redcap_database: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/L1958Narco_DATA_2024-02-05_2054.csv"
+  active: True
+  redcap_database: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/L1958Narco_DATA_2024-02-06_1326.csv"
   output_dir: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/dataframes"
 
 data_sorter:
@@ -30,3 +30,71 @@ first_analysis:
   elliptic_ratio: 1.3
   percent_hypoplasia: 0.5
   imc_length_cutoff: 0 
+
+demographics:
+  dict_variables: 
+    # demographics
+    - "record_id"
+    - "age"
+    - "bmi"
+    - "sex_0_male_1_female"
+    # diagnostic tools
+    - "dgn_diagtool___0"
+    - "dgn_diagtool___1"
+    - "dgn_diagtool___5"
+    - "dgn_diagtool___8"
+    - "dgn_echo_ef"
+    - "dgn_echo_wma"
+    - "dgn_echo_diafun"
+    - "dgn_ecg_classification"
+  
+  output_dir_data: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/statistical_analysis/data"
+  output_dir_figures: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/statistical_analysis/figures"
+
+  dict_rename: 
+    hx_init_none: hx_init_pres_type___0
+    hx_init_angina: hx_init_pres_type___1
+    hx_initi_syncope: hx_init_pres_type___2
+    hx_init_dyspnea: hx_init_pres_type___3
+    hx_init_palpitations: hx_init_pres_type___4
+    hx_init_presyncope: hx_init_pres_type___5
+    hx_initi_fatigue: hx_init_pres_type___6
+    hx_init_arrythmia: hx_init_pres_type___7
+    hx_init_gi_symptoms: hx_init_pres_type___8
+    hx_init_mi: hx_init_pres_type___9
+    hx_init_scd: hx_init_pres_type___10
+    hx_init_aborted_scd: hx_init_pres_type___11
+    hx_init_other: hx_init_pres_type___12
+    dng_echo: dgn_diagtool___1 
+    dng_ecg: dgn_diagtool___5
+    dng_lab: dgn_diagtool___8
+    hx_fhx_cad: hx_fhx___1
+    hx_fhx_caa: hx_fhx___2
+    hx_fhx_scd: hx_fhx___3
+    hx_fhx_otherheart: hx_fhx___4
+    hx_fhx_none: hx_fhx___0
+    sports_symp_angina: sports_symp_type___0
+    sports_symp_syncope: sports_symp_type___1
+    sports_symp_dyspnea: sports_symp_type___2
+    sports_symp_physicalcap: sports_symp_type___3
+    sports_symp_othertype: sports_symp_type___4
+    sports_ch_symp_angina: sports_ch_symp_type___0
+    sports_ch_symp_syncope: sports_ch_symp_type___1
+    sports_ch_symp_dyspnea: sports_ch_symp_type___2
+    sports_ch_symp_physicalcap: sports_ch_symp_type___3
+    sports_ch_symp_othertype: sports_ch_symp_type___4
+    caa_raaoca: caa_origin___0
+    caa_ladaaoca: caa_origin___1
+    caa_lmaaoca: caa_origin___2
+    caa_singleright: caa_origin___3
+    caa_singleleft: caa_origin___4
+    caa_cxaaoca: caa_origin___5
+    caa_other: caa_origin___6
+    caa_interarterial: caa_course___0
+    caa_subpulmonic: caa_course___1
+    caa_prepulmonic: caa_course___2
+    caa_retroaortic: caa_course___3
+    caa_retrocardiac: caa_course___4
+    caa_othercourse: caa_course___5
+    caa_high_rca: caa_high_coronary___0
+    caa_high_lca: caa_high_coronary___1
