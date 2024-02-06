@@ -58,7 +58,7 @@ demographics:
     hx_init_dyspnea: hx_init_pres_type___3
     hx_init_palpitations: hx_init_pres_type___4
     hx_init_presyncope: hx_init_pres_type___5
-    hx_initi_fatigue: hx_init_pres_type___6
+    hx_init_fatigue: hx_init_pres_type___6
     hx_init_arrythmia: hx_init_pres_type___7
     hx_init_gi_symptoms: hx_init_pres_type___8
     hx_init_mi: hx_init_pres_type___9
