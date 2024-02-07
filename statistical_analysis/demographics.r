@@ -88,7 +88,7 @@ for (var in binary_vars) {
 baseline %>% select(record_id, caa_malignancy) %>% filter(is.na(caa_malignancy))
 baseline %>% select(record_id, inv_ffrdobu, caa_malignancy) %>% filter(is.na(inv_ffrdobu) & caa_malignancy == 1)
 
-############################################################################################################
+## CREATE RESULTS DATAFRAME ##########################################################################################################
 # initialize the dataframe
 data_frame_calculations <- data.frame(variable = character(),
                                       type_numeric = numeric(),
@@ -142,19 +142,6 @@ process_numerical <- function(data, var) {
   return(c(n, per, mean, sd, median, iqr))
 }
 
-helper_bind_columns <- function(df, var, group = c("all", "group1", "group2")) {
-  if (group == "all") {
-    df <- cbind(df, c(var, type_numeric = 0, n_all = NA, per_all = NA, mean_all = NA, sd_all = NA, median_all = NA, iqr_all = NA, n_group1 = NA, per_group1 = NA, mean_group1 = NA, sd_group1 = NA, median_group1 = NA, iqr_group1 = NA, n_group2 = NA, per_group2 = NA, mean_group2 = NA, sd_group2 = NA, median_group2 = NA, iqr_group2 = NA))
-  }
-  else if (group == "group1") {
-    df <- cbind(df, c(var, type_numeric = 0, n_all = NA, per_all = NA, mean_all = NA, sd_all = NA, median_all = NA, iqr_all = NA, n_group1 = NA, per_group1 = NA, mean_group1 = NA, sd_group1 = NA, median_group1 = NA, iqr_group1 = NA, n_group2 = NA, per_group2 = NA, mean_group2 = NA, sd_group2 = NA, median_group2 = NA, iqr_group2 = NA))
-  }
-  else if (group == "group2") {
-    df <- cbind(df, c(var, type_numeric = 0, n_all = NA, per_all = NA, mean_all = NA, sd_all = NA, median_all = NA, iqr_all = NA, n_group1 = NA, per_group1 = NA, mean_group1 = NA, sd_group1 = NA, median_group1 = NA, iqr_group1 = NA, n_group2 = NA, per_group2 = NA, mean_group2 = NA, sd_group2 = NA, median_group2 = NA, iqr_group2 = NA))
-  }
-  return(df)
-}
-
 fill_dataframe <- function(data, var_to_group_by, df) {
   group1 <- data %>% filter(!!sym(var_to_group_by) == levels(!!sym(var_to_group_by))[1])
   group2 <- data %>% filter(!!sym(var_to_group_by) == levels(!!sym(var_to_group_by))[2])
@@ -174,25 +161,28 @@ fill_dataframe <- function(data, var_to_group_by, df) {
       iqr_group2 = num_group2[6]))
     }
     else if (is.factor(data[[var]])) {
-      factor_data <- process_factors(data, var)
-      if (length(factor_data) == 2) {
-        df <- rbind(df, c(variable = var, type_numeric = 0, n_all = factor_data[1], per_all = factor_data[2], 
+      factor_all <- process_factors(data, var)
+      factor_group1 <- process_factors(group1, var)
+      factor_group2 <- process_factors(group2, var)
+      if (length(factor_all) == 2) {
+        df <- rbind(df, c(variable = var, type_numeric = 0, n_all = factor_all[1], per_all = factor_all[2], 
         mean_all = NA, sd_all = NA, median_all = NA, 
-        iqr_all = NA, n_group1 = NA, 
-        per_group1 = NA, mean_group1 = NA, sd_group1 = NA, 
+        iqr_all = NA, n_group1 = factor_group1[1], 
+        per_group1 = factor_group1[2], mean_group1 = NA, sd_group1 = NA, 
         median_group1 = NA, iqr_group1 = NA,
-        n_group2 = NA, per_group2 = NA,
+        n_group2 = factor_group2[1], per_group2 = factor_group2[2],
         mean_group2 = NA, sd_group2 = NA, median_group2 = NA,
         iqr_group2 = NA))
       }
       else {
-        for (i in seq_len(nrow(factor_data))) {
-          df <- rbind(df, c(variable = paste0(var, "_",factor_data[i, 1]), type_numeric = 0, n_all = factor_data[i, 2], per_all = factor_data[i, 3], 
+        for (i in seq_len(nrow(factor_all))) {
+          df <- rbind(df, c(variable = paste0(var, "_",factor_all[i, 1]), type_numeric = 0, 
+          n_all = factor_all[i, 2], per_all = factor_all[i, 3], 
           mean_all = NA, sd_all = NA, median_all = NA, 
-          iqr_all = NA, n_group1 = NA, 
-          per_group1 = NA, mean_group1 = NA, sd_group1 = NA, 
+          iqr_all = NA, n_group1 = factor_group1[i, 2], 
+          per_group1 = factor_group1[i, 3], mean_group1 = NA, sd_group1 = NA, 
           median_group1 = NA, iqr_group1 = NA,
-          n_group2 = NA, per_group2 = NA,
+          n_group2 = factor_group1[i, 2], per_group2 = factor_group1[i, 3],
           mean_group2 = NA, sd_group2 = NA, median_group2 = NA,
           iqr_group2 = NA))
         }
@@ -217,48 +207,43 @@ data_frame_malignancy <- fill_dataframe(baseline, "caa_malignancy", data_frame_c
 data_frame_ffr0.8 <- fill_dataframe(baseline, "ffr_0.8", data_frame_calculations)
 data_frame_ffr0.81 <- fill_dataframe(baseline, "ffr_0.81", data_frame_calculations)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# simulation based approach
-numerical_simulation_based <- function(data, numerical_variable, categorical_variable, reps = 1000) {
-    data[[categorical_variable]] <- factor(data[[categorical_variable]], levels = c(0, 1), labels = c("success", "failure"))
-    null_distn <- data %>%
-        specify(response = !!sym(numerical_variable), explanatory = !!sym(categorical_variable)) %>%
-        hypothesize(null = "independence") %>%
-        generate(reps = reps, type = "permute") %>%
-        calculate(stat = "diff in means", order = c("success", "failure"))
-    obs_stat <- data %>%
-        specify(response = !!sym(numerical_variable), explanatory = !!sym(categorical_variable)) %>%
-        calculate(stat = "diff in means", order = c("success", "failure"))
-    p_value <- get_p_value(null_distn, obs_stat, direction = "two sided")
-    return(p_value)
+## ADD STATISTICAL TESTS ##########################################################################################
+numerical_simulation <- function(data, response_var, predictor_var, reps = 5000, direction = "two sided") {
+  data <- data %>% filter(!is.na(!!sym(predictor_var)))
+  formula <- as.formula(paste(response_var, "~", predictor_var))
+  null_distn <- data %>%
+    specify(formula) %>%
+    hypothesize(null = "independence") %>%
+    generate(reps = reps, type = "permute") %>%
+    calculate(
+      stat = "diff in means", 
+      order = c(levels(data[[predictor_var]])[1], levels(data[[predictor_var]])[2]))
+  obs_stat <- data %>%
+    specify(formula) %>%
+    calculate(
+      stat = "diff in means", 
+      order = c(levels(data[[predictor_var]])[1], levels(data[[predictor_var]])[2]))
+  p_value <- get_p_value(null_distn, obs_stat, direction = direction)
+  return(p_value)
 }
 
-test <- baseline %>% filter(!is.na(baseline$ffr_0.8))
-null_distn <- test %>%
-    specify(ccta_mla_a ~ ffr_0.8) %>%
+categorical_simulation <- function(data, response_var, predictor_var, reps = 5000, direction = "two sided") {
+  data <- data %>% filter(!is.na(!!sym(predictor_var)))
+  formula <- as.formula(paste(response_var, "~", predictor_var))
+  null_distn <- data %>%
+    specify(formula, success = levels(data[[predictor_var]])[2]) %>%
     hypothesize(null = "independence") %>%
-    generate(reps = 5000, type = "permute") %>%
-    calculate(stat = "diff in means", order = c("yes", "no"))
-obs_stat <- test %>%
-    specify(ccta_mla_a ~ ffr_0.8) %>%
-    calculate(stat = "diff in means", order = c("yes", "no"))
-p_value <- get_p_value(null_distn, obs_stat, direction = "two sided")
-p_value
+    generate(reps = reps, type = "permute") %>%
+    calculate(
+      stat = "diff in props",
+      order = c(levels(data[[predictor_var]])[2], levels(data[[predictor_var]])[1]))
+  obs_stat <- data %>%
+    specify(formula) %>%
+    calculate(stat = "diff in props",
+      order = c(levels(data[[predictor_var]])[2], levels(data[[predictor_var]])[1]))
+  p_value <- get_p_value(null_distn, obs_stat, direction = direction)
+  return(p_value)
+}
 
-visualize(null_distn) +
-    geom_vline(aes(xintercept = stat), 
-    data = obs_stat, 
-    color = "red")
+p_value <- numerical_simulation(baseline, "inv_ffrdobu", "ffr_0.8", reps = 5000)
+print(p_value)
