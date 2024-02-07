@@ -89,6 +89,7 @@ baseline %>% select(record_id, caa_malignancy) %>% filter(is.na(caa_malignancy))
 baseline %>% select(record_id, inv_ffrdobu, caa_malignancy) %>% filter(is.na(inv_ffrdobu) & caa_malignancy == 1)
 
 ############################################################################################################
+# initialize the dataframe
 data_frame_calculations <- data.frame(variable = character(),
                                       type_numeric = numeric(),
                                       n_all = numeric(),
@@ -119,17 +120,12 @@ process_factors <- function(data, var) {
     return(c(counts, prop))
   }
   else {
-    len <- length(levels(data[[var]]))
     desc_df <- Desc(data[[var]], plot = FALSE)
-    counts <- c()
-    prop <- c()
-    names <- c()
-    for (i in 1:len) {
-      counts[i] <- desc_df[1][[1]]$freq["freq"][i,]
-      prop[i]  <- desc_df[1][[1]]$freq["perc"][i,]
-      names[i] <- desc_df[1][[1]]$freq["level"][i,]
-    }
-    return(c(counts, prop, names))
+    counts <- desc_df[1][[1]]$freq["freq"]
+    prop <- desc_df[1][[1]]$freq["perc"]
+    names <- desc_df[1][[1]]$freq["level"]
+    result_df <- data.frame(levels = names, counts = counts, prop = prop)
+    return(result_df)
   }
 }
 
@@ -146,12 +142,24 @@ process_numerical <- function(data, var) {
   return(c(n, per, mean, sd, median, iqr))
 }
 
+helper_bind_columns <- function(df, var, group = c("all", "group1", "group2")) {
+  if (group == "all") {
+    df <- cbind(df, c(var, type_numeric = 0, n_all = NA, per_all = NA, mean_all = NA, sd_all = NA, median_all = NA, iqr_all = NA, n_group1 = NA, per_group1 = NA, mean_group1 = NA, sd_group1 = NA, median_group1 = NA, iqr_group1 = NA, n_group2 = NA, per_group2 = NA, mean_group2 = NA, sd_group2 = NA, median_group2 = NA, iqr_group2 = NA))
+  }
+  else if (group == "group1") {
+    df <- cbind(df, c(var, type_numeric = 0, n_all = NA, per_all = NA, mean_all = NA, sd_all = NA, median_all = NA, iqr_all = NA, n_group1 = NA, per_group1 = NA, mean_group1 = NA, sd_group1 = NA, median_group1 = NA, iqr_group1 = NA, n_group2 = NA, per_group2 = NA, mean_group2 = NA, sd_group2 = NA, median_group2 = NA, iqr_group2 = NA))
+  }
+  else if (group == "group2") {
+    df <- cbind(df, c(var, type_numeric = 0, n_all = NA, per_all = NA, mean_all = NA, sd_all = NA, median_all = NA, iqr_all = NA, n_group1 = NA, per_group1 = NA, mean_group1 = NA, sd_group1 = NA, median_group1 = NA, iqr_group1 = NA, n_group2 = NA, per_group2 = NA, mean_group2 = NA, sd_group2 = NA, median_group2 = NA, iqr_group2 = NA))
+  }
+  return(df)
+}
+
 fill_dataframe <- function(data, var_to_group_by, df) {
   group1 <- data %>% filter(!!sym(var_to_group_by) == levels(!!sym(var_to_group_by))[1])
   group2 <- data %>% filter(!!sym(var_to_group_by) == levels(!!sym(var_to_group_by))[2])
   
   for (var in names(data)){
-    print(var)
     if (is.numeric(data[[var]])) {
       num_data <- process_numerical(data, var)
       num_group1 <- process_numerical(group1, var)
@@ -167,28 +175,47 @@ fill_dataframe <- function(data, var_to_group_by, df) {
     }
     else if (is.factor(data[[var]])) {
       factor_data <- process_factors(data, var)
-      df <- rbind(df, c(variable = var, type_numeric = 0, n_all = factor_data[1], per_all = factor_data[2], 
-      mean_all = factor_data[3], sd_all = factor_data[4], median_all = factor_data[5], 
-      iqr_all = factor_data[6], n_group1 = factor_data[7], 
-      per_group1 = factor_data[8], mean_group1 = factor_data[9], sd_group1 = factor_data[10], 
-      median_group1 = factor_data[11], iqr_group1 = factor_data[12]
-      , n_group2 = factor_data[13], per_group2 = factor_data[14],
-      mean_group2 = factor_data[15], sd_group2 = factor_data[16], median_group2 = factor_data[17],
-      iqr_group2 = factor_data[18]))
-    }
+      if (length(factor_data) == 2) {
+        df <- rbind(df, c(variable = var, type_numeric = 0, n_all = factor_data[1], per_all = factor_data[2], 
+        mean_all = NA, sd_all = NA, median_all = NA, 
+        iqr_all = NA, n_group1 = NA, 
+        per_group1 = NA, mean_group1 = NA, sd_group1 = NA, 
+        median_group1 = NA, iqr_group1 = NA,
+        n_group2 = NA, per_group2 = NA,
+        mean_group2 = NA, sd_group2 = NA, median_group2 = NA,
+        iqr_group2 = NA))
+      }
+      else {
+        for (i in seq_len(nrow(factor_data))) {
+          df <- rbind(df, c(variable = paste0(var, "_",factor_data[i, 1]), type_numeric = 0, n_all = factor_data[i, 2], per_all = factor_data[i, 3], 
+          mean_all = NA, sd_all = NA, median_all = NA, 
+          iqr_all = NA, n_group1 = NA, 
+          per_group1 = NA, mean_group1 = NA, sd_group1 = NA, 
+          median_group1 = NA, iqr_group1 = NA,
+          n_group2 = NA, per_group2 = NA,
+          mean_group2 = NA, sd_group2 = NA, median_group2 = NA,
+          iqr_group2 = NA))
+        }
+      }
+    }  
   }
+  suffix_group1 <- paste0("_", levels(data[[var_to_group_by]])[1])
+  suffix_group2 <- paste0("_", levels(data[[var_to_group_by]])[2])
+  
+  colnames(df) <- c("Variable", "Type_Numeric", "N_All", "Per_All", 
+                    "Mean_All", "SD_All", "Median_All", "IQR_All", 
+                    paste0("N", suffix_group1), paste0("Per", suffix_group1),
+                    paste0("Mean", suffix_group1), paste0("SD", suffix_group1),
+                    paste0("Median", suffix_group1), paste0("IQR", suffix_group1),
+                    paste0("N", suffix_group2), paste0("Per", suffix_group2),
+                    paste0("Mean", suffix_group2), paste0("SD", suffix_group2),
+                    paste0("Median", suffix_group2), paste0("IQR", suffix_group2))
   return(df)
 }
 
-process_factors(baseline, "sports_static_component")
-
-test <- fill_dataframe(data = baseline, "caa_malignancy", df = data_frame_calculations)
-
-
-
-
-
-
+data_frame_malignancy <- fill_dataframe(baseline, "caa_malignancy", data_frame_calculations)
+data_frame_ffr0.8 <- fill_dataframe(baseline, "ffr_0.8", data_frame_calculations)
+data_frame_ffr0.81 <- fill_dataframe(baseline, "ffr_0.81", data_frame_calculations)
 
 
 
