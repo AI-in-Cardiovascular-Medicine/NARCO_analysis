@@ -90,44 +90,27 @@ baseline %>% select(record_id, inv_ffrdobu, caa_malignancy) %>% filter(is.na(inv
 
 ############################################################################################################
 data_frame_calculations <- data.frame(variable = character(),
+                                      type_numeric = numeric(),
                                       n_all = numeric(),
                                       per_all = numeric(),
                                       mean_all = numeric(), 
+                                      sd_all = numeric(),
                                       median_all = numeric(), 
-                                      iqr_all = numeric(), 
-                                      norm_all = numeric(),
+                                      iqr_all = numeric(),
                                       n_group1 = numeric(),
                                       per_group1 = numeric(),
-                                      mean_group1 = numeric(), 
-                                      median_group1 = numeric(), 
-                                      iqr_group1 = numeric(), 
-                                      norm_group1 = numeric(),
+                                      mean_group1 = numeric(),
+                                      sd_group1 = numeric(),
+                                      median_group1 = numeric(),
+                                      iqr_group1 = numeric(),
                                       n_group2 = numeric(),
                                       per_group2 = numeric(),
                                       mean_group2 = numeric(), 
+                                      sd_group2 = numeric(),
                                       median_group2 = numeric(), 
-                                      iqr_group2 = numeric(), 
-                                      norm_group2 = numeric(),
-                                      p_traditional = numeric(),
-                                      p_simulation = numeric(),
-                                      p_tradition_corrected = numeric(),
-                                      p_simulation_corrected = numeric(),
-                                      stringsAsFactors = FALSE)
-
-fill_dataframe <- function(data, var_to_group_by) {
-  group1 <- data %>% filter(var_to_group_by == levels(data[[var_to_group_by]])[1])
-  group2 <- data %>% filter(var_to_group_by == levels(data[[var_to_group_by]])[2])
-
-  for (var in names(data)) {
-    if (is.numeric(data[[var]])) {
-      num_data <- process_numerical(data, var)
-      num_group1 <- process_numerical(group1, var)
-      num_group2 <- process_numerical(group2, var)
-      data_frame_calculations <- rbind(data_frame_calculations, 
-      c(var, NA, num_data, num_group1, num_group2, NA, NA, NA, NA, NA))
-    }
-  }
-}
+                                      iqr_group2 = numeric(),
+                                      stringsAsFactors = FALSE,
+                                      row.names = TRUE)
 
 process_factors <- function(data, var) {
   if (length(levels(data[[var]])) == 2) {
@@ -137,7 +120,6 @@ process_factors <- function(data, var) {
   }
   else {
     len <- length(levels(data[[var]]))
-    print(len)
     desc_df <- Desc(data[[var]], plot = FALSE)
     counts <- c()
     prop <- c()
@@ -153,14 +135,73 @@ process_factors <- function(data, var) {
 
 process_numerical <- function(data, var) {
   n <- sum(!is.na(data[[var]]))
+  per <- n / nrow(data)
   mean <- mean(data[[var]], na.rm = TRUE)
+  sd <- sd(data[[var]], na.rm = TRUE)
   median <- median(data[[var]], na.rm = TRUE)
   q25 <- as.numeric(quantile(data[[var]], 0.25, na.rm = TRUE))
   q75 <- as.numeric(quantile(data[[var]], 0.75, na.rm = TRUE))
   iqr <- q75 - q25
-  norm <- shapiro.test(data[[var]])$p.value
-  return(c(n, mean, median, iqr, norm))
+
+  return(c(n, per, mean, sd, median, iqr))
 }
+
+fill_dataframe <- function(data, var_to_group_by, df) {
+  group1 <- data %>% filter(!!sym(var_to_group_by) == levels(!!sym(var_to_group_by))[1])
+  group2 <- data %>% filter(!!sym(var_to_group_by) == levels(!!sym(var_to_group_by))[2])
+  
+  for (var in names(data)){
+    print(var)
+    if (is.numeric(data[[var]])) {
+      num_data <- process_numerical(data, var)
+      num_group1 <- process_numerical(group1, var)
+      num_group2 <- process_numerical(group2, var)
+      df <- rbind(df, c(variable = var, type_numeric = 1, n_all = num_data[1], per_all = num_data[2], 
+      mean_all = num_data[3], sd_all = num_data[4], median_all = num_data[5], 
+      iqr_all = num_data[6], n_group1 = num_group1[1], 
+      per_group1 = num_group1[2], mean_group1 = num_group1[3], sd_group1 = num_group1[4], 
+      median_group1 = num_group1[5], iqr_group1 = num_group1[6]
+      , n_group2 = num_group2[1], per_group2 = num_group2[2],
+      mean_group2 = num_group2[3], sd_group2 = num_group2[4], median_group2 = num_group2[5],
+      iqr_group2 = num_group2[6]))
+    }
+    else if (is.factor(data[[var]])) {
+      factor_data <- process_factors(data, var)
+      df <- rbind(df, c(variable = var, type_numeric = 0, n_all = factor_data[1], per_all = factor_data[2], 
+      mean_all = factor_data[3], sd_all = factor_data[4], median_all = factor_data[5], 
+      iqr_all = factor_data[6], n_group1 = factor_data[7], 
+      per_group1 = factor_data[8], mean_group1 = factor_data[9], sd_group1 = factor_data[10], 
+      median_group1 = factor_data[11], iqr_group1 = factor_data[12]
+      , n_group2 = factor_data[13], per_group2 = factor_data[14],
+      mean_group2 = factor_data[15], sd_group2 = factor_data[16], median_group2 = factor_data[17],
+      iqr_group2 = factor_data[18]))
+    }
+  }
+  return(df)
+}
+
+process_factors(baseline, "sports_static_component")
+
+test <- fill_dataframe(data = baseline, "caa_malignancy", df = data_frame_calculations)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # simulation based approach

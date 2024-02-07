@@ -91,15 +91,15 @@ class AnalysisDfs:
         list_inv = list(zip(rows, suffix))
         columns_to_replace = [col for col in self.baseline.columns if col.startswith('inv_')]
 
+        inv = inv.filter(regex=r'^(?!.*___\d+$).*')
         for record_id, s in list_inv:
             if s is not None:
                 columns_from_inv = [
                     col
                     for col in inv.columns
-                    if col.startswith('inv_') and col.endswith(s) and not col.endswith(str('__' + s))
+                    if col.startswith('inv_') and col.endswith(str(s))
                 ]
-                list_replace = list(zip(columns_to_replace, columns_from_inv))
-                for col_to_replace, col_from_inv in zip(columns_to_replace, columns_from_inv):
+                for col_to_replace, col_from_inv in zip(sorted(columns_to_replace), sorted(columns_from_inv)):
                     # Match 'record_id' and replace columns
                     self.baseline.loc[self.baseline['record_id'] == record_id, col_to_replace] = inv.loc[
                         inv['record_id'] == record_id, col_from_inv

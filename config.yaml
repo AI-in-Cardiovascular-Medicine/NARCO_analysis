@@ -9,8 +9,8 @@ hydra:
     dir: .
 
 data_prepper:
-  active: True
-  redcap_database: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/L1958Narco_DATA_2024-02-06_1326.csv"
+  active: False
+  redcap_database: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/L1958Narco_DATA_2024-02-07_1349.csv"
   output_dir: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/dataframes"
 
 data_sorter:
