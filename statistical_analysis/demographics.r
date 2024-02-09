@@ -48,21 +48,16 @@ baseline <- baseline %>%
       (sports_static_component == 2 & sports_dynamic_component == 1) | (sports_static_component == 1 & sports_dynamic_component ==2) ~ 4,
       sports_static_component == 2 & sports_dynamic_component == 2 ~ 5,
     ),
+    sports_classification_ch = case_when(
+      sports_static_component_ch == 0 & sports_dynamic_comp_ch == 0 ~ 1,
+      (sports_static_component_ch == 1 & sports_dynamic_comp_ch == 0) | (sports_static_component_ch == 0 & sports_dynamic_comp_ch ==1) ~ 2,
+      (sports_static_component_ch == 2 & sports_dynamic_comp_ch == 0) | (sports_static_component_ch == 1 & sports_dynamic_comp_ch == 1) | (sports_static_component_ch == 0 & sports_dynamic_comp_ch == 2) ~ 3,
+      (sports_static_component_ch == 2 & sports_dynamic_comp_ch == 1) | (sports_static_component_ch == 1 & sports_dynamic_comp_ch ==2) ~ 4,
+      sports_static_component_ch == 2 & sports_dynamic_comp_ch == 2 ~ 5,
+    ),
     ffr_0.8 = ifelse(inv_ffrdobu <= 0.8, 1, 0),
     ffr_0.81 = ifelse(inv_ffrdobu <= 0.81, 1, 0)
   )
-
-# baseline <- baseline %>% 
-#   mutate(
-#     sports_classification_ch = case_when(
-#       sports_static_component_ch == 0 & sports_dynamic_component_ch == 0 ~ 1,
-#       (sports_static_component_ch == 1 & sports_dynamic_component_ch == 0) | (sports_static_component_ch == 0 & sports_dynamic_component_ch ==1) ~ 2,
-#       (sports_static_component_ch == 2 & sports_dynamic_component_ch == 0) | (sports_static_component_ch == 1 & sports_dynamic_component_ch == 1) | (sports_static_component_ch == 0 & sports_dynamic_component_ch == 2) ~ 3,
-#       (sports_static_component_ch == 2 & sports_dynamic_component_ch == 1) | (sports_static_component_ch == 1 & sports_dynamic_component_ch ==2) ~ 4,
-#       sports_static_component_ch == 2 & sports_dynamic_component_ch == 2 ~ 5,
-#     )
-#   )
-
 
 ## FACTORIZE ##########################################################################################################
 baseline$sex_0_male_1_female <- factor(baseline$sex_0_male_1_female, levels = c(0, 1), labels = c("male", "female"))
@@ -82,6 +77,8 @@ binary_vars <- names(baseline)[
 for (var in binary_vars) {
   baseline[[var]] <- factor(baseline[[var]], levels = c(0, 1), labels = c("no", "yes"))
 }
+
+saveRDS(baseline, file = paste0(yaml$demographics$output_dir_data, "/baseline.rds"))
 ############################################################################################################
 # Two splits: one for benign and malign and the other for ffr above and below equal 0.8
 # check if contains any NA --> shouldn't be the case, if yes check database
@@ -90,7 +87,7 @@ baseline %>% select(record_id, inv_ffrdobu, caa_malignancy) %>% filter(is.na(inv
 
 ## CREATE RESULTS DATAFRAME ##########################################################################################################
 # initialize the dataframe
-data_frame_calculations <- data.frame(variable = character(),
+dataframe_calculations <- data.frame(variable = character(),
                                       type_numeric = numeric(),
                                       n_all = numeric(),
                                       per_all = numeric(),
@@ -203,12 +200,12 @@ fill_dataframe <- function(data, var_to_group_by, df) {
   return(df)
 }
 
-data_frame_malignancy <- fill_dataframe(baseline, "caa_malignancy", data_frame_calculations)
-data_frame_ffr0.8 <- fill_dataframe(baseline, "ffr_0.8", data_frame_calculations)
-data_frame_ffr0.81 <- fill_dataframe(baseline, "ffr_0.81", data_frame_calculations)
+dataframe_malignancy <- fill_dataframe(baseline, "caa_malignancy", dataframe_calculations)
+dataframe_ffr0.8 <- fill_dataframe(baseline, "ffr_0.8", dataframe_calculations)
+dataframe_ffr0.81 <- fill_dataframe(baseline, "ffr_0.81", dataframe_calculations)
 
 ## ADD STATISTICAL TESTS ##########################################################################################
-numerical_simulation <- function(data, response_var, predictor_var, reps = 5000, direction = "two sided") {
+diff_means_simulation <- function(data, response_var, predictor_var, reps = 5000, direction = "two sided") {
   data <- data %>% filter(!is.na(!!sym(predictor_var)))
   formula <- as.formula(paste(response_var, "~", predictor_var))
   null_distn <- data %>%
@@ -227,23 +224,100 @@ numerical_simulation <- function(data, response_var, predictor_var, reps = 5000,
   return(p_value)
 }
 
-categorical_simulation <- function(data, response_var, predictor_var, reps = 5000, direction = "two sided") {
+diff_props_simulation <- function(data, response_var, predictor_var, reps = 5000, direction = "two sided") {
   data <- data %>% filter(!is.na(!!sym(predictor_var)))
   formula <- as.formula(paste(response_var, "~", predictor_var))
+
+  response_levels <- levels(data[[response_var]])
   null_distn <- data %>%
-    specify(formula, success = levels(data[[predictor_var]])[2]) %>%
+    specify(formula, success = response_levels[2]) %>%
     hypothesize(null = "independence") %>%
     generate(reps = reps, type = "permute") %>%
     calculate(
       stat = "diff in props",
       order = c(levels(data[[predictor_var]])[2], levels(data[[predictor_var]])[1]))
   obs_stat <- data %>%
-    specify(formula) %>%
+    specify(formula, success = response_levels[2]) %>%
     calculate(stat = "diff in props",
       order = c(levels(data[[predictor_var]])[2], levels(data[[predictor_var]])[1]))
   p_value <- get_p_value(null_distn, obs_stat, direction = direction)
   return(p_value)
 }
 
-p_value <- numerical_simulation(baseline, "inv_ffrdobu", "ffr_0.8", reps = 5000)
-print(p_value)
+chisq_simulation <- function(data, response_var, predictor_var, reps = 5000, direction = "greater") {
+  data <- data %>% filter(!is.na(!!sym(predictor_var)))
+  formula <- as.formula(paste(response_var, "~", predictor_var))
+  null_distn <- data %>%
+    specify(formula) %>%
+    hypothesize(null = "independence") %>%
+    generate(reps = reps, type = "permute") %>%
+    calculate(stat = "Chisq")
+  obs_stat <- data %>%
+    specify(formula) %>%
+    calculate(stat = "Chisq")
+  p_value <- get_p_value(null_distn, obs_stat, direction = direction)
+  return(p_value)
+}
+
+statistics_dataframe <- function(data, df, predictor_var, reps = 5000, direction = "two sided") {
+  group1 <- data %>% filter(!!sym(predictor_var) == levels(!!sym(predictor_var))[1])
+  group2 <- data %>% filter(!!sym(predictor_var) == levels(!!sym(predictor_var))[2])
+  df_stats <- data.frame(variable = character(), p_norm_all = numeric(), p_norm_group1 = numeric(), 
+                        p_norm_group2 = numeric(), p_value_t = numeric(), p_value_wilcox = numeric(), 
+                        p_value_prop = numeric(), p_value_chi = numeric(), p_value_sim_mean = numeric(), 
+                        p_value_sim_prop = numeric(), p_value_sim_chi = numeric(), stringsAsFactors = FALSE)
+  for (var in names(data)){
+    tryCatch({
+      if (is.numeric(data[[var]])) {
+        p_sim <- diff_means_simulation(data, var, predictor_var, reps, direction)
+        p_all <- shapiro.test(data[[var]])$p.value
+        p_group1 <- shapiro.test(group1[[var]])$p.value
+        p_group2 <- shapiro.test(group2[[var]])$p.value
+        p_t <- t.test(data[[var]] ~ data[[predictor_var]], alternative = "two.sided")$p.value
+        p_wilcox <- wilcox.test(data[[var]] ~ data[[predictor_var]], alternative = "two.sided")$p.value
+        df_stats <- rbind(df_stats, c(variable = var, p_norm_all = p_all, p_norm_group1 = p_group1, 
+                                      p_norm_group2 = p_group2, p_value_t = p_t, p_value_wilcox = p_wilcox, 
+                                      p_value_prop = NA, p_value_chi = NA, p_value_sim_mean = as.numeric(p_sim), 
+                                      p_value_sim_prop = NA, p_value_sim_chi = NA))
+      }
+      else if (is.factor(data[[var]])) {
+        p_values_prop <- c()
+        p_values_chi <- c()
+        if (length(levels(data[[var]])) == 2) {
+          p_sim_prop <- diff_props_simulation(data, var, predictor_var, reps, direction)
+          p_prop <- prop.test(table(data[[var]], data[[predictor_var]]))$p.value
+          p_values_prop <- c(as.numeric(p_sim_prop), p_prop)
+        } else if (length(levels(data[[var]])) > 2) {  # Perform chi-square test
+          p_sim_chi <- chisq_simulation(data, var, predictor_var, reps, direction)
+          p_chi <- chisq.test(table(data[[var]], data[[predictor_var]]))$p.value
+          p_values_chi <- c(as.numeric(p_sim_chi), p_chi)
+        }
+        df_stats <- rbind(df_stats, c(variable = var, p_norm_all = NA, p_norm_group1 = NA, 
+                                      p_norm_group2 = NA, p_value_t = NA, p_value_wilcox = NA, 
+                                      p_value_prop = p_values_prop[2], p_value_chi = p_values_chi[2], 
+                                      p_value_sim_mean = NA, p_value_sim_prop = p_values_prop[1], 
+                                      p_value_sim_chi = p_values_chi[1]))
+      }
+      else {
+      print(paste("Skipping", var, "as it has only one level."))
+      df_stats <- rbind(df_stats, c(variable = var, p_norm_all = NA, p_norm_group1 = NA, 
+                                  p_norm_group2 = NA, p_value_t = NA, p_value_wilcox = NA, 
+                                  p_value_prop = NA, p_value_chi = NA, p_value_sim_mean = NA, 
+                                  p_value_sim_prop = NA, p_value_sim_chi = NA))
+    }
+    }, error = function(e) {
+      cat("Error occurred for variable:", var, "\n")
+      message("Error message:", e$message, "\n")
+      df_stats <- rbind(df_stats, c(variable = var, p_norm_all = NA, p_norm_group1 = NA, 
+                                  p_norm_group2 = NA, p_value_t = NA, p_value_wilcox = NA, 
+                                  p_value_prop = NA, p_value_chi = NA, p_value_sim_mean = NA, 
+                                  p_value_sim_prop = NA, p_value_sim_chi = NA))
+    })
+  }
+  colnames(df_stats) <- c("Variable", "P_Norm_All", "P_Norm_Group1", "P_Norm_Group2", 
+                          "P_Value_T", "P_Value_Wilcox", "P_Value_Prop", "P_Value_Chi", 
+                          "P_Value_Sim_Mean", "P_Value_Sim_Prop", "P_Value_Sim_Chi")
+  return(df_stats)
+}
+
+test2 <- statistics_dataframe(baseline, dataframe_malignancy, "caa_malignancy")
