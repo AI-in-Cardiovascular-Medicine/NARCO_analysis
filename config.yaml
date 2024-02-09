@@ -54,7 +54,7 @@ demographics:
   dict_rename: 
     hx_init_none: hx_init_pres_type___0
     hx_init_angina: hx_init_pres_type___1
-    hx_initi_syncope: hx_init_pres_type___2
+    hx_init_syncope: hx_init_pres_type___2
     hx_init_dyspnea: hx_init_pres_type___3
     hx_init_palpitations: hx_init_pres_type___4
     hx_init_presyncope: hx_init_pres_type___5
