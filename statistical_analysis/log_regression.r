@@ -2,6 +2,8 @@ library(tidyverse)
 library(broom)
 library(ggplot2)
 library(yardstick)
+library(pROC)
+library(randomForest)
 
 baseline <- readRDS("C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/statistical_analysis/data/baseline.rds")
 
@@ -82,10 +84,10 @@ logistic_regression_categorical <- function(baseline_data, response, explanatory
     odds_ratio <- exp(coef(mdl))[2]
     lower_ci <- exp(confint(mdl))[2]
     upper_ci <- exp(confint(mdl))[4]
-
+    print(formula)
     tryCatch(
         {
-            outcome <- table(explanatory, response)
+            outcome <- table(baseline_data[[explanatory]], baseline_data[[response]])
             confusion <- conf_mat(outcome)
             plot_acc <- autoplot(confusion)
         },
@@ -123,7 +125,7 @@ mdl_slo_multi_interaction <- glm(ffr_0.8 ~ ccta_ostial_a * ccta_ostial_elliptic,
 all_ost_a <- simple_logistic_regression(baseline, "ffr_0.8", "ccta_ostial_a")
 mdl_ost_a_ffr <- all_ost_a[[1]]
 summary(mdl_ost_a_ffr) # significant
-prediction_data <- all[[2]]
+prediction_data <- all_ost_a[[2]]
 print(prediction_data, n = 50)
 plot_log_ost_a <- all_ost_a[[3]]
 plot_log_ost_a
@@ -239,7 +241,7 @@ forest_df <- data.frame(
     lower_ci = c(exp(confint(mdl_ost_a_ffr))[2], exp(confint(mdl_ost_ellip_ffr))[2], exp(confint(mdl_ost_pn_ffr))[2], exp(confint(mdl_mla_ffr))[2], exp(confint(mdl_ellip))[2], exp(confint(mdl_pn_ffr))[2], exp(confint(mdl_imc_ffr))[2], exp(confint(mdl_aa_ffr))[2]),
     upper_ci = c(exp(confint(mdl_ost_a_ffr))[4], exp(confint(mdl_ost_ellip_ffr))[4], exp(confint(mdl_ost_pn_ffr))[4], exp(confint(mdl_mla_ffr))[4], exp(confint(mdl_ellip))[4], exp(confint(mdl_pn_ffr))[4], exp(confint(mdl_imc_ffr))[4], exp(confint(mdl_aa_ffr))[4])
 )
-ggplot(data = forest_df, aes(y = var, x = odds_ratio, xmin = lower_ci, xmax = upper_ci)) +
+forest_continuous_ffr0.8 <- ggplot(data = forest_df, aes(y = var, x = odds_ratio, xmin = lower_ci, xmax = upper_ci)) +
     geom_point() +
     geom_errorbarh(height = 0.2) +
     geom_vline(xintercept = 1, linetype = "dashed") +
@@ -260,12 +262,35 @@ forest_df0.81 <- data.frame(
     lower_ci = c(exp(confint(mdl_ost_a_ffr_081[[1]]))[2], exp(confint(mdl_ost_ellip_ffr_081[[1]]))[2], exp(confint(mdl_ost_pn_ffr_081[[1]]))[2], exp(confint(mdl_mla_ffr_081[[1]]))[2], exp(confint(mdl_ellip_081[[1]]))[2], exp(confint(mdl_pn_ffr_081[[1]]))[2], exp(confint(mdl_imc_ffr_081[[1]]))[2], exp(confint(mdl_aa_ffr_081[[1]]))[2]),
     upper_ci = c(exp(confint(mdl_ost_a_ffr_081[[1]]))[4], exp(confint(mdl_ost_ellip_ffr_081[[1]]))[4], exp(confint(mdl_ost_pn_ffr_081[[1]]))[4], exp(confint(mdl_mla_ffr_081[[1]]))[4], exp(confint(mdl_ellip_081[[1]]))[4], exp(confint(mdl_pn_ffr_081[[1]]))[4], exp(confint(mdl_imc_ffr_081[[1]]))[4], exp(confint(mdl_aa_ffr_081[[1]]))[4])
 )
-ggplot(data = forest_df0.81, aes(y = var, x = odds_ratio, xmin = lower_ci, xmax = upper_ci)) +
+forest_continuous_ffr0.81 <- ggplot(data = forest_df0.81, aes(y = var, x = odds_ratio, xmin = lower_ci, xmax = upper_ci)) +
     geom_point() +
     geom_errorbarh(height = 0.2) +
     geom_vline(xintercept = 1, linetype = "dashed") +
     theme_minimal()
 
+# save images
+ggsave(paste(yaml$demographics$output_dir_figures, "/forest_continuous_ffr0.8.png"), forest_continuous_ffr0.8, width = 10, height = 5)
+ggsave(paste(yaml$demographics$output_dir_figures, "/forest_continuous_ffr0.81.png"), forest_continuous_ffr0.81, width = 10, height = 5)
+
+## ROC analysis #####################################################################################################
+data_ost <- baseline %>% select(ccta_ostial_a, ffr_0.8) %>% drop_na()
+data_mla <- baseline %>% select(ccta_mla_a, ffr_0.8) %>% drop_na()
+data_elliptic <- baseline %>% select(ccta_ostial_elliptic, ffr_0.8) %>% drop_na()
+par(pty = "s")
+roc(data_ost$ffr_0.8, mdl_ost_a_ffr$fitted.values, plot=TRUE, legacy.axes = TRUE,
+col = "#1818aa", lwd = 4, print.auc = TRUE, print.auc.y = 0.4)
+roc(data_mla$ffr_0.8, mdl_mla_ffr$fitted.values, plot=TRUE, legacy.axes = TRUE,
+col = "#18aa7e", lwd = 4, print.auc = TRUE, print.auc.y = 0.37, add = TRUE)
+legend("bottomright", legend = c("Ostial area", "MLA"), col = c("#1818aa", "#18aa7e"), lwd = 4)
+par(pty = "m")
+
+# roc_ost_a <- roc(data_ost$ffr_0.8, mdl_ost_a_ffr$fitted.values)
+# roc_mla <- roc(data_mla$ffr_0.8, mdl_mla_ffr$fitted.values)
+# plot(tpr ~ fpr, 
+#     coords(roc_ost_a, "all", ret = c("tpr", "fpr"), transpose = FALSE),
+#     type = "l", col = "#1818aa", lwd = 4)
+# coords(roc_ost_a, "best", ret="threshold", transpose = FALSE,
+# best.method="youden")
 
 ####################################################################################################################
 # binary explanatory variable

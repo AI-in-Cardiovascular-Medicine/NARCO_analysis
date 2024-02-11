@@ -302,7 +302,7 @@ statistics_dataframe <- function(data, df, predictor_var, reps = 5000, direction
   return(df_stats)
 }
 
-table_cleaner <- function(df_all, df_stats, corrector = "holm") {
+table_cleaner <- function(df_all, df_stats) {
   new_df <- data.frame(Variable = character(), N = character(), mean_all = character(), mean_group1 = character(), mean_group2 = character(), 
   p_value_classic = character(), p_value_sim = character(), p_value_classic_corrected = character(), p_value_sim_corrected = character(), stringsAsFactors = FALSE)
   
@@ -401,8 +401,14 @@ ffr0.8_df[, c(2:28)] <- sapply(ffr0.8_df[, c(2:28)], as.numeric)
 ffr0.81_df[, c(2:28)] <- sapply(ffr0.81_df[, c(2:28)], as.numeric)
 
 malignancy_df_clean <- table_cleaner(baseline, malignancy_df)
+malignancy_df_clean <- malignancy_df_clean %>% mutate(p_value_classic_fdr = p.adjust(`P value classic`, method = "fdr"),
+                                p_value_sim_fdr = p.adjust(`P value simulated`, method = "fdr"))
 ffr0.8_df_clean <- table_cleaner(baseline, ffr0.8_df)
+ffr0.8_df_clean <- ffr0.8_df_clean %>% mutate(p_value_classic_fdr = p.adjust(`P value classic`, method = "fdr"),
+                                p_value_sim_fdr = p.adjust(`P value simulated`, method = "fdr"))
 ffr0.81_df_clean <- table_cleaner(baseline, ffr0.81_df)
+ffr0.81_df_clean <- ffr0.81_df_clean %>% mutate(p_value_classic_fdr = p.adjust(`P value classic`, method = "fdr"),
+                                p_value_sim_fdr = p.adjust(`P value simulated`, method = "fdr"))
 
 saveRDS(malignancy_df_clean, file = paste0(yaml$demographics$output_dir_data, "/malignancy_df.rds"))
 saveRDS(ffr0.8_df_clean, file = paste0(yaml$demographics$output_dir_data, "/ffr0.8_df.rds"))
