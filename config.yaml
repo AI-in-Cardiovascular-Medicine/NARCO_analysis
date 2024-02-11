@@ -52,127 +52,132 @@ demographics:
   output_dir_figures: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/statistical_analysis/figures"
 
   dict_rename: 
-    sex_0_male_1_female: sex_0_male_1_female
-    age: age
-    bmi: bmi
-    hx_caa_known: hx_caa_known
-    hx_init_none: hx_init_pres_type___0
-    hx_init_angina: hx_init_pres_type___1
-    hx_init_syncope: hx_init_pres_type___2
-    hx_init_dyspnea: hx_init_pres_type___3
-    hx_init_palpitations: hx_init_pres_type___4
-    hx_init_presyncope: hx_init_pres_type___5
-    hx_init_fatigue: hx_init_pres_type___6
-    hx_init_arrythmia: hx_init_pres_type___7
-    hx_init_gi_symptoms: hx_init_pres_type___8
-    hx_init_mi: hx_init_pres_type___9
-    hx_init_scd: hx_init_pres_type___10
-    hx_init_aborted_scd: hx_init_pres_type___11
-    hx_init_other: hx_init_pres_type___12
-    hx_sym_ap: hx_sym_ap
-    hx_sym_ap_ccs: hx_sym_ap_ccs
-    hx_sym_ap_stress: hx_sym_ap_stress
-    hx_sym_sync_exercise: hx_sym_sync_exercise
-    hx_sym_dysp_nyha: hx_sym_dysp_nyha
-    hx_sym_div_exercise: hx_sym_div_exercise
-    hx_htn: hx_htn
-    hx_dm: hx_dm
-    hx_chol: hx_chol
-    hx_fhx_cad: hx_fhx___1
-    hx_fhx_caa: hx_fhx___2
-    hx_fhx_scd: hx_fhx___3
-    hx_fhx_otherheart: hx_fhx___4
-    hx_fhx_none: hx_fhx___0
-    hx_hxtobacco: hx_hxtobacco
-    hx_bm_asp: hx_bm_asp
-    hx_bm_statin: hx_bm_statin
-    hx_bm_clopi: hx_bm_clopi
-    hx_bm_ticagrelor: hx_bm_ticagrelor
-    hx_bm_prasugrel: hx_bm_prasugrel
-    hx_bm_calcblock: hx_bm_calcblock
-    hx_bm_betablock: hx_bm_betablock
-    hx_bm_nitrates: hx_bm_nitrates
-    hx_bm_noak: hx_bm_noak
-    hx_bm_antico: hx_bm_antico
-    hx_bm_ace: hx_bm_ace
-    hx_bm_arb: hx_bm_arb
-    hx_bm_diuretic: hx_bm_diuretic
-    sports_yn: sports_yn
-    sports_level: sports_level
-    sports_static_component: sports_static_component
-    sports_dynamic_component: sports_dynamic_component
-    sports_symptoms: sports_symptoms
-    sports_yn_ch: sports_yn_ch
-    sports_ch_symp: sports_ch_symp
-    sports_level_ch: sports_level_ch
-    sports_static_component_ch: sports_static_component_ch
-    sports_dynamic_comp_ch: sports_dynamic_comp_ch
-    caa_modality: caa_modality
-    caa_raaoca: caa_origin___0
-    caa_ladaaoca: caa_origin___1
-    caa_lmaaoca: caa_origin___2
-    caa_singleright: caa_origin___3
-    caa_singleleft: caa_origin___4
-    caa_cxaaoca: caa_origin___5
-    caa_other: caa_origin___6
-    caa_ostia: caa_ostia
-    caa_interarterial: caa_course___0
-    caa_subpulmonic: caa_course___1
-    caa_prepulmonic: caa_course___2
-    caa_retroaortic: caa_course___3
-    caa_retrocardiac: caa_course___4
-    caa_othercourse: caa_course___5
-    caa_high_rca: caa_high_coronary___0
-    caa_high_lca: caa_high_coronary___1
-    caa_slo: caa_slo
-    caa_elliptic: caa_elliptic
-    caa_pn: caa_pn
-    caa_angle: caa_angle
-    caa_im: caa_im
-    caa_malignancy: caa_malignancy
-    dgn_diagtool___1: dgn_diagtool___1
-    dgn_echo_ef: dgn_echo_ef
-    dgn_echo_wma: dgn_echo_wma
-    dgn_echo_diafun: dgn_echo_diafun
-    ccta_photon: ccta_photon
-    ccta_quali: ccta_quali
-    ccta_ostial_a: ccta_ostial_a
-    ccta_ostial_h: ccta_ostial_h
-    ccta_ostial_w: ccta_ostial_w
-    ccta_mla_a: ccta_mla_a
-    ccta_aa_degree: ccta_aa_degree
-    ccta_imc_length: ccta_imc_length
-    ccta_mla_elliptic: ccta_mla_elliptic
-    ccta_pn_dist: ccta_pn_dist
-    ccta_agatston: ccta_agatston
-    ccta_dominance: ccta_dominance
-    ccta_cad: ccta_cad
-    funct_type___0: funct_type___0
-    funct_ergo_findings: funct_ergo_findings
-    inv_dominance: inv_dominance
-    inv_cad: inv_cad
-    inv_rest_hr: inv_rest_hr
-    inv_rest_aosys: inv_rest_aosys
-    inv_rest_aodia: inv_rest_aodia
-    inv_rest_aomean: inv_rest_aomean
-    inv_ffrado: inv_ffrado
-    inv_ivusrest_mla: inv_ivusrest_mla
-    inv_ffrdobu: inv_ffrdobu
-    inv_ffrdobu_symp: inv_ffrdobu_symp
-    inv_dobu_hr: inv_dobu_hr
-    inv_dobu_aosys: inv_dobu_aosys
-    inv_dobu_aodia: inv_dobu_aodia
-    inv_dobu_aomean: inv_dobu_aomean
-    inv_ivusdobu_mla: inv_ivusdobu_mla
-    synp_inv: synp_inv
-    synp_inv_yn: synp_inv_yn
-    synp_funct: synp_funct
-    synp_funct_yn: synp_funct_yn
-    synp_hemo: synp_hemo
-    synp_symp: synp_symp
-    synp_surgery: synp_surgery
-    synp_surgery_yn: synp_surgery_yn
-    synp_stent: synp_stent
-    synp_stent_yn: synp_stent_yn
-    synp_sport: synp_sport
-    synp_treatment: synp_treatment
+    Sex Female: sex_0_male_1_female
+    Age: age
+    BMI: bmi
+    CAA known before presentation: hx_caa_known
+    No symptoms: hx_init_pres_type___0
+    Angina pectoris: hx_init_pres_type___1
+    Syncope: hx_init_pres_type___2
+    Dyspnea: hx_init_pres_type___3
+    Palpitations: hx_init_pres_type___4
+    Presyncope: hx_init_pres_type___5
+    Fatigue: hx_init_pres_type___6
+    Arrythmia: hx_init_pres_type___7
+    Gastrointestinal symptoms: hx_init_pres_type___8
+    MYocardial infarction: hx_init_pres_type___9
+    Sudden cardiac death: hx_init_pres_type___10
+    Aborted SCD: hx_init_pres_type___11
+    Other symptom: hx_init_pres_type___12
+    Atypical angina: hx_sym_ap
+    CCS: hx_sym_ap_ccs
+    AP during psychological stress: hx_sym_ap_stress
+    Syncope during exercise: hx_sym_sync_exercise
+    NYHA: hx_sym_dysp_nyha
+    Other symptom during exercise: hx_sym_div_exercise
+    History hypertension: hx_htn
+    History diabetes mellitus: hx_dm
+    History dyslipidemia: hx_chol
+    Family history CAD: hx_fhx___1
+    Family history CAA: hx_fhx___2
+    Family history SCD: hx_fhx___3
+    Family history other heart disease: hx_fhx___4
+    No known family history: hx_fhx___0
+    History of tobacco: hx_hxtobacco
+    Aspirin: hx_bm_asp
+    Statin: hx_bm_statin
+    Clopidogrel: hx_bm_clopi
+    Ticagrelor: hx_bm_ticagrelor
+    Prasugrel: hx_bm_prasugrel
+    Calcium antagonist: hx_bm_calcblock
+    Betablocker: hx_bm_betablock
+    Nitrates: hx_bm_nitrates
+    NOAK: hx_bm_noak
+    Vitamin K-antagonist: hx_bm_antico
+    ACE inhibitor: hx_bm_ace
+    ARB: hx_bm_arb
+    Diuretics: hx_bm_diuretic
+    Sports activity: sports_yn
+    Sports level: sports_level
+    Sports static component: sports_static_component
+    Sports dynamic component: sports_dynamic_component
+    Symptoms during sport: sports_symptoms
+    Sports activity childhood: sports_yn_ch
+    Symptoms during sport childhood: sports_ch_symp
+    Sports level childhood: sports_level_ch
+    Sports static component childhood: sports_static_component_ch
+    Sports dynamic component childhood: sports_dynamic_comp_ch
+    Modality diagnosis CAA: caa_modality
+    R-AAOCA: caa_origin___0
+    LAD-AAOCA: caa_origin___1
+    LM-AAOCA: caa_origin___2
+    Single right: caa_origin___3
+    Single left: caa_origin___4
+    Cx-AAOCA: caa_origin___5
+    Other CAA: caa_origin___6
+    Two ostia: caa_ostia
+    Interarterial course: caa_course___0
+    Subpulmonic course: caa_course___1
+    Prepulmonic course: caa_course___2
+    Retroaortic course: caa_course___3
+    Retrocardiac course: caa_course___4
+    Other course: caa_course___5
+    High take-off RCA: caa_high_coronary___0
+    High take-off LCA: caa_high_coronary___1
+    Slit-like ostium: caa_slo
+    Elliptic ratio: caa_elliptic
+    Proximal narrowing: caa_pn
+    Acute take-off angle: caa_angle
+    Intramural course: caa_im
+    Malignant CAA: caa_malignancy
+    Echocardiography done: dgn_diagtool___1
+    LVEF [%] echocardiography: dgn_echo_ef
+    WMA echocardiography: dgn_echo_wma
+    Diastolic function echocardiography: dgn_echo_diafun
+    Pathological ECG: dgn_ecg_classification
+    Photon counting: ccta_photon
+    CCTA quality: ccta_quali
+    CCTA ostial area: ccta_ostial_a
+    CCTA ostial height: ccta_ostial_h
+    CCTA ostial width: ccta_ostial_w
+    CCTA minimal lumen area: ccta_mla_a
+    CCTA acute take-off angle degrees: ccta_aa_degree
+    CCTA intramural course length: ccta_imc_length
+    CCTA MLA ellipticity: ccta_mla_elliptic
+    CCTA proximal narrowing [%]: ccta_pn_dist
+    Agatston score: ccta_agatston
+    CCTA dominance: ccta_dominance
+    CCTA CAD: ccta_cad
+    Ergometry: funct_type___0
+    Ergometry findings: funct_ergo_findings
+    Invasive dominance: inv_dominance
+    Invasive CAD: inv_cad
+    Invasive resting heart rate: inv_rest_hr
+    Invasive systolic aortic pressure rest: inv_rest_aosys
+    Invasive diastolic aortic pressure rest: inv_rest_aodia
+    Invasive mean aortic pressure rest: inv_rest_aomean
+    Invasive FFRadenosine: inv_ffrado
+    MLA IVUSrest: inv_ivusrest_mla
+    Invasive FFRdobutamine: inv_ffrdobu
+    Symptoms during FFRdobutamine: inv_ffrdobu_symp
+    Invasive dobutamine heart rate: inv_dobu_hr
+    Invasive systolic aortic pressure stress: inv_dobu_aosys
+    Invasive diastolic aortic pressure stress: inv_dobu_aodia
+    Invasive mean aortic pressure stress: inv_dobu_aomean
+    MLA IVUSstress: inv_ivusdobu_mla
+    Indication for invasive testing: synp_inv
+    Underwent invasive testing: synp_inv_yn
+    Indication for functional testing: synp_funct
+    Underwent functional testing: synp_funct_yn
+    Hemodynamically relevant: synp_hemo
+    Symptoms linked to findings: synp_symp
+    Indication for surgery: synp_surgery
+    Underwent surgery: synp_surgery_yn
+    Indication for stenting: synp_stent
+    Underwent stenting: synp_stent_yn
+    Indication for sports restriction: synp_sport
+    Change in treatment: synp_treatment
+    Start aspirin: synp_treatment_type___0
+    Start betablocker: synp_treatment_type___1
+    Start statin: synp_treatment_type___2
+    Start otehr: synp_treatment_type___3

@@ -40,12 +40,21 @@ baseline$caa_modality <- factor(baseline$caa_modality, levels = c(0, 1, 2, 3, 4,
 baseline$hx_sym_ap_ccs <- factor(baseline$hx_sym_ap_ccs, levels = 1:4, ordered = TRUE, labels = c("I", "II", "III", "IV"))
 baseline$hx_sym_dysp_nyha <- factor(baseline$hx_sym_dysp_nyha, levels = 1:4, ordered = TRUE, labels = c("I", "II", "III", "IV"))
 baseline$sports_level <- factor(baseline$sports_level, levels = 1:3, ordered = TRUE, labels = c("recreational", "competitive", "elite"))
+baseline$sports_level_ch <- factor(baseline$sports_level_ch, levels = 1:3, ordered = TRUE, labels = c("recreational", "competitive", "elite"))
 baseline$sports_static_component <- factor(baseline$sports_static_component, levels = 0:2, ordered = TRUE, labels = c("I", "II", "III"))
 baseline$sports_static_component_ch <- factor(baseline$sports_static_component_ch, levels = 0:2, ordered = TRUE, labels = c("I", "II", "III"))
 baseline$sports_dynamic_component <- factor(baseline$sports_dynamic_component, levels = 0:2, ordered = TRUE, labels = c("A", "B", "C"))
 baseline$sports_dynamic_comp_ch <- factor(baseline$sports_dynamic_comp_ch, levels = 0:2, ordered = TRUE, labels = c("A", "B", "C"))
 baseline$sports_classification <- factor(baseline$sports_classification, levels = 1:5, ordered = TRUE, labels = c("very low", "low", "moderate", "high", "very high"))
 baseline$caa_malignancy <- factor(baseline$caa_malignancy, levels = c(0, 1), labels = c("benign", "malign"))
+baseline$caa_ostia <- factor(baseline$caa_ostia, levels = c(0, 1), labels = c("one", "two"))
+baseline$dgn_echo_diafun <- factor(baseline$dgn_echo_diafun, levels = c(1, 2, 3, 4, 5, 6), labels = c("normal", "grade 1", "grade 2", "grade 3", "undefined arrythmia", "undefined"))
+baseline$dgn_ecg_classification <- factor(baseline$dgn_ecg_classification, levels = c(0, 1), labels = c("normal", "abnormal"))
+baseline$ccta_quali <- factor(baseline$ccta_quali, levels = c(0, 1, 2, 3), labels = c("1", "2", "3", "4"))
+baseline$ccta_dominance <- factor(baseline$ccta_dominance, levels = c(0, 1, 2), labels = c("right", "left", "balanced"))
+baseline$funct_ergo_findings <- factor(baseline$funct_ergo_findings, levels = c(1, 2, 3, 4), labels = c("clinical and electrical negative", "clinical negative, electrical positive", "clinical positive, electrical negative", "clinical and electrical positive"))
+baseline$inv_dominance <- factor(baseline$inv_dominance, levels = c(0, 1, 2), labels = c("right", "left", "balanced"))
+baseline$synp_symp <- factor(baseline$synp_symp, levels = c(0, 1, 2, 3), labels = c("incidental finding", "symptoms linked to caa", "symptoms linked to cad", "symptoms linked to other"))
 binary_vars <- names(baseline)[
   sapply(names(baseline), function(var_name) {
     all(baseline[[var_name]] %in% c(0, 1, NA))
@@ -293,7 +302,74 @@ statistics_dataframe <- function(data, df, predictor_var, reps = 5000, direction
   return(df_stats)
 }
 
-# actual analysis
+table_cleaner <- function(df_all, df_stats, corrector = "holm") {
+  new_df <- data.frame(Variable = character(), N = character(), mean_all = character(), mean_group1 = character(), mean_group2 = character(), 
+  p_value_classic = character(), p_value_sim = character(), p_value_classic_corrected = character(), p_value_sim_corrected = character(), stringsAsFactors = FALSE)
+  
+  for (i in 1:nrow(df_stats)) {
+    var <- df_stats[i, 1]
+    n <- df_stats[i, 3]
+    sum_all <- nrow(df_all)
+    sum_group1 <- max(df_stats[, 9], na.rm = TRUE)
+    sum_group2 <- max(df_stats[, 15], na.rm = TRUE)
+    all <- c()
+    group1 <- c()
+    group2 <- c()
+    p_value_classic <- c()
+    p_value_sim <- c()
+    if (df_stats[i, 2] == 1 && all(!is.na(df_stats[i, 21:23])) && all(df_stats[i, 21:23] > 0.05)){
+      mean_all <- round(df_stats[i, 5], 1)
+      sd_all <- round(df_stats[i, 6], 1)
+      mean_group1 <- round(df_stats[i, 11], 1)
+      sd_group1 <- round(df_stats[i, 12], 1)
+      mean_group2 <- round(df_stats[i, 17], 1)
+      sd_group2 <- round(df_stats[i, 18], 1)
+      all <- c(all, paste(mean_all,"±", sd_all))
+      group1 <- c(group1, paste(mean_group1, "±", sd_group1))
+      group2 <- c(group2, paste(mean_group2, "±", sd_group2))
+      p_value_classic <- c(p_value_classic, df_stats[i, 24])
+      p_value_sim <- c(p_value_sim, df_stats[i, 28])
+    }
+    else if (df_stats[i, 2] == 1 && all(!is.na(df_stats[i, 21:23])) && any(df_stats[i, 21:23] < 0.05)){
+      median_all <- round(df_stats[i, 7], 1)
+      iqr_all <- round(df_stats[i, 8], 1)
+      median_group1 <- round(df_stats[i, 13], 1)
+      iqr_group1 <- round(df_stats[i, 14], 1)
+      median_group2 <- round(df_stats[i, 19], 1)
+      iqr_group2 <- round(df_stats[i, 20], 1)
+      all <- c(all, paste(median_all,"(", iqr_all, ")"))
+      group1 <- c(group1, paste(median_group1,"(", iqr_group1, ")"))
+      group2 <- c(group2, paste(median_group2,"(", iqr_group2, ")"))
+      p_value_classic <- c(p_value_classic, df_stats[i, 25])
+      p_value_sim <- c(p_value_sim, df_stats[i, 28])
+    }
+    else {
+      n_all <- df_stats[i, 3]
+      per_all <- df_stats[i, 4] * 100
+      n_group1 <- df_stats[i, 9]
+      per_group1 <- (n_group1 / sum_group1) * 100
+      n_group2 <- df_stats[i, 15]
+      per_group2 <- (n_group2 / sum_group2) * 100
+      all <- c(all, paste(n_all, "(", round(per_all), "%)"))
+      group1 <- c(group1, paste(n_group1, "(", round(per_group1), "%)"))
+      group2 <- c(group2, paste(n_group2, "(", round(per_group2), "%)"))
+      p_value_classic <- c(p_value_classic, df_stats[i, 26])
+      p_value_sim <- c(p_value_sim, df_stats[i, 28])
+    }
+    p_value_classic <- ifelse(is.na(p_value_classic), "NA", ifelse(p_value_classic < 0.05, round(p_value_classic, 3), round(p_value_classic, 2)))
+    p_value_sim <- ifelse(is.na(p_value_sim), "NA", ifelse(p_value_sim < 0.05, round(p_value_sim, 3), round(p_value_sim, 2)))
+
+    new_df <- rbind(new_df, c(Variable = var, N = paste(n, "(", round((n / sum_all) * 100), "%)"), mean_all = all[1],
+    mean_group1 = group1[1], mean_group2 = group2[1], p_value_classic = p_value_classic, 
+    p_value_sim = p_value_sim, p_value_classic_corrected = NA, p_value_sim_corrected = NA))
+  }
+  new_df <- new_df[, -c(8:9)]
+  colnames(new_df) <- c("Variable", "N", "All", "Group 1", 
+                        "Group 2", "P value classic", "P value simulated")
+  return(new_df)
+}
+
+## ACTUAL ANALYSIS ########################################################################################################## 
 vars <- c()
 for (i in seq_along(yaml$demographics$dict_rename)) {
     vars <- c(vars, yaml$demographics$dict_rename[[i]])
@@ -309,4 +385,25 @@ malignancy_df <- merge(dataframe_malignancy, p_values_malignancy, by = "Variable
 ffr0.8_df <- merge(dataframe_ffr0.8, p_values_ffr0.8, by = "Variable", all = TRUE)
 ffr0.81_df <- merge(dataframe_ffr0.81, p_values_ffr0.81, by = "Variable", all = TRUE)
 
-write_xlsx(malignancy_df, paste0(yaml$demographics$output_dir, "/malignancy.xlsx"))
+for (i in seq_along(yaml$demographics$dict_rename)) { 
+    new_names <- names(yaml$demographics$dict_rename)[i] 
+    old_names <- yaml$demographics$dict_rename[[i]] 
+    malignancy_df$Variable <- gsub(old_names, new_names, malignancy_df$Variable)
+    ffr0.8_df$Variable <- gsub(old_names, new_names, ffr0.8_df$Variable)
+    ffr0.81_df$Variable <- gsub(old_names, new_names, ffr0.81_df$Variable)
+}
+
+malignancy_df <- malignancy_df %>% select(-c("P_Value_Sim_Prop", "P_Value_Sim_Chi")) %>% rename(P_Value_Simulation = P_Value_Sim_Mean)
+ffr0.8_df <- ffr0.8_df %>% select(-c("P_Value_Sim_Prop", "P_Value_Sim_Chi")) %>% rename(P_Value_Simulation = P_Value_Sim_Mean)
+ffr0.81_df <- ffr0.81_df %>% select(-c("P_Value_Sim_Prop", "P_Value_Sim_Chi")) %>% rename(P_Value_Simulation = P_Value_Sim_Mean)
+malignancy_df[, c(2:28)] <- sapply(malignancy_df[, c(2:28)], as.numeric)
+ffr0.8_df[, c(2:28)] <- sapply(ffr0.8_df[, c(2:28)], as.numeric)
+ffr0.81_df[, c(2:28)] <- sapply(ffr0.81_df[, c(2:28)], as.numeric)
+
+malignancy_df_clean <- table_cleaner(baseline, malignancy_df)
+ffr0.8_df_clean <- table_cleaner(baseline, ffr0.8_df)
+ffr0.81_df_clean <- table_cleaner(baseline, ffr0.81_df)
+
+saveRDS(malignancy_df_clean, file = paste0(yaml$demographics$output_dir_data, "/malignancy_df.rds"))
+saveRDS(ffr0.8_df_clean, file = paste0(yaml$demographics$output_dir_data, "/ffr0.8_df.rds"))
+saveRDS(ffr0.81_df_clean, file = paste0(yaml$demographics$output_dir_data, "/ffr0.81_df.rds"))
