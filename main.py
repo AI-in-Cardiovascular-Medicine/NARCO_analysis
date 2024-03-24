@@ -19,7 +19,7 @@ def data_preparation(config: DictConfig) -> None:
         pass
     if config.first_analysis.active:
         first_analysis = AnalysisDfs(config)
-        _, _ = first_analysis()
+        baseline, followup = first_analysis()
 
 if __name__ == '__main__':
     data_preparation()

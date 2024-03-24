@@ -28,7 +28,7 @@ class AnalysisDfs:
     def keep_bl_columns(self):
         # keep all columns that don't have suffix _(any number)
         data = self.data.filter(regex=r'^(?!.*(_1|\_\d+)$)(?!.*(_\d+)$)(?!.*(___\\d+)$).*$')
-        data = data.filter(regex = r'^(?!.*_y\d+$)')
+        data = data.filter(regex=r'^(?!.*_y\d+$)')
         # all follow up only columns
         cols_to_exclude = [
             col
@@ -94,11 +94,7 @@ class AnalysisDfs:
         inv = inv.filter(regex=r'^(?!.*___\d+$).*')
         for record_id, s in list_inv:
             if s is not None:
-                columns_from_inv = [
-                    col
-                    for col in inv.columns
-                    if col.startswith('inv_') and col.endswith(str(s))
-                ]
+                columns_from_inv = [col for col in inv.columns if col.startswith('inv_') and col.endswith(str(s))]
                 for col_to_replace, col_from_inv in zip(sorted(columns_to_replace), sorted(columns_from_inv)):
                     # Match 'record_id' and replace columns
                     self.baseline.loc[self.baseline['record_id'] == record_id, col_to_replace] = inv.loc[
@@ -223,5 +219,5 @@ class AnalysisDfs:
 
             self.follow_up.loc[i, 'timeto_censor_y'] = global_censor
             self.follow_up.loc[i, 'mace'] = int(global_mace)
-        
-        
+
+

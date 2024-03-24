@@ -31,7 +31,8 @@ baseline <- baseline %>%
       sports_static_component_ch == 2 & sports_dynamic_comp_ch == 2 ~ 5,
     ),
     ffr_0.8 = ifelse(inv_ffrdobu <= 0.8, 1, 0),
-    ffr_0.81 = ifelse(inv_ffrdobu <= 0.81, 1, 0)
+    ffr_0.81 = ifelse(inv_ffrdobu <= 0.81, 1, 0),
+    slo_cheezum = ccta_ostial_w / (2 * sqrt(ccta_dist_a / pi))
   )
 
 ## FACTORIZE ##########################################################################################################
@@ -50,11 +51,13 @@ baseline$caa_malignancy <- factor(baseline$caa_malignancy, levels = c(0, 1), lab
 baseline$caa_ostia <- factor(baseline$caa_ostia, levels = c(0, 1), labels = c("one", "two"))
 baseline$dgn_echo_diafun <- factor(baseline$dgn_echo_diafun, levels = c(1, 2, 3, 4, 5, 6), labels = c("normal", "grade 1", "grade 2", "grade 3", "undefined arrythmia", "undefined"))
 baseline$dgn_ecg_classification <- factor(baseline$dgn_ecg_classification, levels = c(0, 1), labels = c("normal", "abnormal"))
-baseline$ccta_quali <- factor(baseline$ccta_quali, levels = c(0, 1, 2, 3), labels = c("1", "2", "3", "4"))
+baseline$ccta_quali <- factor(baseline$ccta_quali, levels = c(0, 1, 2, 3), ordered = TRUE, labels = c("1", "2", "3", "4"))
 baseline$ccta_dominance <- factor(baseline$ccta_dominance, levels = c(0, 1, 2), labels = c("right", "left", "balanced"))
 baseline$funct_ergo_findings <- factor(baseline$funct_ergo_findings, levels = c(1, 2, 3, 4), labels = c("clinical and electrical negative", "clinical negative, electrical positive", "clinical positive, electrical negative", "clinical and electrical positive"))
 baseline$inv_dominance <- factor(baseline$inv_dominance, levels = c(0, 1, 2), labels = c("right", "left", "balanced"))
 baseline$synp_symp <- factor(baseline$synp_symp, levels = c(0, 1, 2, 3), labels = c("incidental finding", "symptoms linked to caa", "symptoms linked to cad", "symptoms linked to other"))
+baseline$hx_dm <- factor(baseline$hx_dm, levels = c(2, 1, 3, 0), labels = c("DM Typ1", "DM Typ2", "Prediabetes", "No DM"))
+baseline$hx_hxtobacco <- factor(baseline$hx_hxtobacco, levels = c(1, 2), labels = c("Hx Tobacco", "No Hx Tobacco"))
 binary_vars <- names(baseline)[
   sapply(names(baseline), function(var_name) {
     all(baseline[[var_name]] %in% c(0, 1, NA))
@@ -128,7 +131,7 @@ process_numerical <- function(data, var) {
 fill_dataframe <- function(data, var_to_group_by, df) {
   group1 <- data %>% filter(!!sym(var_to_group_by) == levels(!!sym(var_to_group_by))[1])
   group2 <- data %>% filter(!!sym(var_to_group_by) == levels(!!sym(var_to_group_by))[2])
-  
+
   for (var in names(data)){
     if (is.numeric(data[[var]])) {
       num_data <- process_numerical(data, var)
@@ -165,7 +168,7 @@ fill_dataframe <- function(data, var_to_group_by, df) {
           iqr_all = NA, n_group1 = factor_group1[i, 2], 
           per_group1 = factor_group1[i, 3], mean_group1 = NA, sd_group1 = NA, 
           median_group1 = NA, iqr_group1 = NA,
-          n_group2 = factor_group1[i, 2], per_group2 = factor_group1[i, 3],
+          n_group2 = factor_group2[i, 2], per_group2 = factor_group2[i, 3],
           mean_group2 = NA, sd_group2 = NA, median_group2 = NA,
           iqr_group2 = NA))
         }
@@ -310,6 +313,8 @@ table_cleaner <- function(df_all, df_stats) {
     var <- df_stats[i, 1]
     n <- df_stats[i, 3]
     sum_all <- nrow(df_all)
+    # sum_group1 <- max(df_stats[, 9], na.rm = TRUE)
+    # sum_group2 <- max(df_stats[, 15], na.rm = TRUE)
     sum_group1 <- max(df_stats[, 9], na.rm = TRUE)
     sum_group2 <- max(df_stats[, 15], na.rm = TRUE)
     all <- c()
@@ -374,42 +379,49 @@ vars <- c()
 for (i in seq_along(yaml$demographics$dict_rename)) {
     vars <- c(vars, yaml$demographics$dict_rename[[i]])
 }
-data <- baseline %>% select("record_id", all_of(vars), "sports_classification", "sports_classification_ch", "caa_malignancy", "ffr_0.8", "ffr_0.81")
-dataframe_malignancy <- fill_dataframe(data, "caa_malignancy", dataframe_calculations)
+data <- baseline %>% 
+  select("record_id", all_of(vars), "ffr_0.8") %>%
+  filter(!is.na(inv_ivusrest_mla))
+# dataframe_malignancy <- fill_dataframe(data, "caa_malignancy", dataframe_calculations)
 dataframe_ffr0.8 <- fill_dataframe(data, "ffr_0.8", dataframe_calculations)
-dataframe_ffr0.81 <- fill_dataframe(data, "ffr_0.81", dataframe_calculations)
-p_values_malignancy <- statistics_dataframe(data, dataframe_malignancy, "caa_malignancy")
+# p_values_malignancy <- statistics_dataframe(data, dataframe_malignancy, "caa_malignancy")
 p_values_ffr0.8 <- statistics_dataframe(data, dataframe_ffr0.8, "ffr_0.8")
-p_values_ffr0.81 <- statistics_dataframe(data, dataframe_ffr0.81, "ffr_0.81")
-malignancy_df <- merge(dataframe_malignancy, p_values_malignancy, by = "Variable", all = TRUE)
+# malignancy_df <- merge(dataframe_malignancy, p_values_malignancy, by = "Variable", all = TRUE)
 ffr0.8_df <- merge(dataframe_ffr0.8, p_values_ffr0.8, by = "Variable", all = TRUE)
-ffr0.81_df <- merge(dataframe_ffr0.81, p_values_ffr0.81, by = "Variable", all = TRUE)
 
 for (i in seq_along(yaml$demographics$dict_rename)) { 
     new_names <- names(yaml$demographics$dict_rename)[i] 
     old_names <- yaml$demographics$dict_rename[[i]] 
-    malignancy_df$Variable <- gsub(old_names, new_names, malignancy_df$Variable)
     ffr0.8_df$Variable <- gsub(old_names, new_names, ffr0.8_df$Variable)
-    ffr0.81_df$Variable <- gsub(old_names, new_names, ffr0.81_df$Variable)
 }
 
-malignancy_df <- malignancy_df %>% select(-c("P_Value_Sim_Prop", "P_Value_Sim_Chi")) %>% rename(P_Value_Simulation = P_Value_Sim_Mean)
+for(i in seq_along(yaml$demographics$dict_rename)){
+  print(names(yaml$demographics$dict_rename)[i])
+  print(yaml$demographics$dict_rename[[i]])
+}
+
+# malignancy_df <- malignancy_df %>% select(-c("P_Value_Sim_Prop", "P_Value_Sim_Chi")) %>% rename(P_Value_Simulation = P_Value_Sim_Mean)
 ffr0.8_df <- ffr0.8_df %>% select(-c("P_Value_Sim_Prop", "P_Value_Sim_Chi")) %>% rename(P_Value_Simulation = P_Value_Sim_Mean)
-ffr0.81_df <- ffr0.81_df %>% select(-c("P_Value_Sim_Prop", "P_Value_Sim_Chi")) %>% rename(P_Value_Simulation = P_Value_Sim_Mean)
-malignancy_df[, c(2:28)] <- sapply(malignancy_df[, c(2:28)], as.numeric)
+# ffr0.81_df <- ffr0.81_df %>% select(-c("P_Value_Sim_Prop", "P_Value_Sim_Chi")) %>% rename(P_Value_Simulation = P_Value_Sim_Mean)
+# malignancy_df[, c(2:28)] <- sapply(malignancy_df[, c(2:28)], as.numeric)
 ffr0.8_df[, c(2:28)] <- sapply(ffr0.8_df[, c(2:28)], as.numeric)
-ffr0.81_df[, c(2:28)] <- sapply(ffr0.81_df[, c(2:28)], as.numeric)
+# ffr0.81_df[, c(2:28)] <- sapply(ffr0.81_df[, c(2:28)], as.numeric)
 
-malignancy_df_clean <- table_cleaner(baseline, malignancy_df)
-malignancy_df_clean <- malignancy_df_clean %>% mutate(p_value_classic_fdr = p.adjust(`P value classic`, method = "fdr"),
-                                p_value_sim_fdr = p.adjust(`P value simulated`, method = "fdr"))
-ffr0.8_df_clean <- table_cleaner(baseline, ffr0.8_df)
+# malignancy_df_clean <- table_cleaner(baseline, malignancy_df)
+# malignancy_df_clean <- malignancy_df_clean %>% mutate(p_value_classic_fdr = p.adjust(`P value classic`, method = "fdr"),
+#                                 p_value_sim_fdr = p.adjust(`P value simulated`, method = "fdr"))
+ffr0.8_df_clean <- table_cleaner(data, ffr0.8_df)
 ffr0.8_df_clean <- ffr0.8_df_clean %>% mutate(p_value_classic_fdr = p.adjust(`P value classic`, method = "fdr"),
-                                p_value_sim_fdr = p.adjust(`P value simulated`, method = "fdr"))
-ffr0.81_df_clean <- table_cleaner(baseline, ffr0.81_df)
-ffr0.81_df_clean <- ffr0.81_df_clean %>% mutate(p_value_classic_fdr = p.adjust(`P value classic`, method = "fdr"),
-                                p_value_sim_fdr = p.adjust(`P value simulated`, method = "fdr"))
+                                p_value_sim_fdr = p.adjust(`P value simulated`, method = "fdr"),
+                                p_value_classic_holm = p.adjust(`P value classic`, method = "holm"),
+                                p_value_sim_holm = p.adjust(`P value simulated`, method = "holm"))
 
-saveRDS(malignancy_df_clean, file = paste0(yaml$demographics$output_dir_data, "/malignancy_df.rds"))
+write.csv(ffr0.8_df_clean, "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/statistical_analysis/data/ffr0.8_df.csv", row.names = FALSE)
+
 saveRDS(ffr0.8_df_clean, file = paste0(yaml$demographics$output_dir_data, "/ffr0.8_df.rds"))
-saveRDS(ffr0.81_df_clean, file = paste0(yaml$demographics$output_dir_data, "/ffr0.81_df.rds"))
+
+ffr_0.8 <- readRDS("C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/statistical_analysis/data/ffr0.8_df.rds")
+ffr_0.8 <- ffr_0.8 %>% mutate(p_value_classic_holm = p.adjust(`P value classic`, method = "holm"),
+                                p_value_sim_holm = p.adjust(`P value simulated`, method = "holm"))
+R.version.string
+write.csv(ffr_0.8, "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/statistical_analysis/data/ffr0.8_df.csv", row.names = FALSE)
