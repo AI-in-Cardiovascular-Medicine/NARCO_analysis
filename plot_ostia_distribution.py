@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import os
 
 
 class OstialDistribution:
@@ -118,8 +119,11 @@ class OstialDistribution:
         plt.xlabel('coronary cusps')
         plt.ylabel('height')
         plt.title('Distribution of ostia')
+        
+        output_dir = self.config.plot_ostia_distribution.output_dir
+        os.makedirs(output_dir, exist_ok=True)  # Ensure the output directory exists
+        output_file = "ostial_distribution.png"
+        output_path = os.path.join(output_dir, output_file)
+        plt.savefig(output_path)
+        
         plt.show()
-
-# df = OstialDistribution()()
-# print(df.head(5))
-# print(df['ccta_stj_d'].head(100))

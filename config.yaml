@@ -39,6 +39,20 @@ plot_ostia_distribution:
   input_file_distance: "C:/WorkingData/Documents/3_Research/distance.xlsx"
   output_dir: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/figures"
 
+r_script_runner:
+  active: True
+
+statistical_analysis:
+  demographics: False
+  log_regression: True
+  invasive_data: True
+  survival_analysis: True
+
+  input_demographics: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/statistical_analysis/demographics.r"
+  input_log_regression: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/statistical_analysis/log_regression.r"
+  input_invasive_data: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/statistical_analysis/invasive_data.r"
+  input_survival_analysis: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/statistical_analysis/survival_analysis.r"
+
 demographics:
   dict_variables: 
     # demographics

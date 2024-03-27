@@ -7,6 +7,9 @@ from loguru import logger
 from data_prepper import DataPrepper
 from data_sorter import plotter
 from first_analysis import AnalysisDfs
+from plot_ostia_distribution import OstialDistribution
+from r_script_runner import StatisticalAnalysisR
+
 
 @hydra.main(version_base=None, config_path='.', config_name='config')
 def data_preparation(config: DictConfig) -> None:
@@ -17,9 +20,19 @@ def data_preparation(config: DictConfig) -> None:
     if config.data_sorter.active:
         # _ = plotter(data)
         pass
+
     if config.first_analysis.active:
         first_analysis = AnalysisDfs(config)
         baseline, followup = first_analysis()
+
+    if config.plot_ostia_distribution.active:
+        ostial_distribution = OstialDistribution(config)
+        _ = ostial_distribution()
+
+    if config.r_script_runner.active:
+        r_script_runner = StatisticalAnalysisR(config)
+        _ = r_script_runner()
+
 
 if __name__ == '__main__':
     data_preparation()
