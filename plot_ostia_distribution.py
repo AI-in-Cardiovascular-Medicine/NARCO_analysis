@@ -4,11 +4,10 @@ import matplotlib.pyplot as plt
 
 
 class OstialDistribution:
-    def __init__(self) -> None:
-        self.baseline = pd.read_excel(
-            'C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/dataframes/baseline.xlsx'
-        )
-        self.distance = pd.read_excel('C:/WorkingData/Documents/3_Research/distance.xlsx')
+    def __init__(self, config) -> None:
+        self.config = config
+        self.baseline = pd.read_excel(self.config.plot_ostia_distribution.input_file_baseline)
+        self.distance = pd.read_excel(self.config.plot_ostia_distribution.input_file_distance)
         self.df = None
 
     def __call__(self):
@@ -72,48 +71,6 @@ class OstialDistribution:
         self.df['ccta_aoa_rca'] = self.df['ccta_aoa_rca'] * self.df['scalor_height']
         self.df['ccta_aoa_lca'] = self.df['ccta_aoa_lca'] * self.df['scalor_height']
 
-    # def plotter_ccta(self):
-    #     circumference = max(self.df['adjusted_circumference'])
-    #     column = circumference / 3
-    #     height = max(self.df['length_sinus'])
-
-    #     x_coords_rca = self.df['bogen_rca'] + column
-    #     y_coords_rca = self.df['ccta_aoa_rca']
-    #     x_coords_lca = self.df['bogen_lca'] + column
-    #     y_coords_lca = self.df['ccta_aoa_lca']
-
-    #     # Plot the horizontal dotted line at y = height
-    #     plt.axhline(y=height, color='k', linestyle='--')
-
-    #     # Plot the vertical solid lines at x = column and x = column * 2
-    #     plt.axvline(x=column, ymax=height / plt.gca().get_ylim()[1], color='k', linestyle='-')
-    #     plt.axvline(x=column * 2, ymax=height / plt.gca().get_ylim()[1], color='k', linestyle='-')
-
-    #     # Plot the inverted arch
-    #     arch_x_rcc = np.linspace(column, column * 2, 100)
-    #     arch_x_lcc = np.linspace(0, column, 100)
-    #     arch_x_acc = np.linspace(column * 2, circumference, 100)
-    #     arch_y = height * ((arch_x_rcc - column * 1.5) / (column * 0.5)) ** 2
-    #     plt.plot(arch_x_rcc, arch_y, 'black')
-    #     plt.plot(arch_x_lcc, arch_y, 'black')
-    #     plt.plot(arch_x_acc, arch_y, 'black')
-
-    #     # Plot the data points
-    #     plt.plot(x_coords_rca, y_coords_rca, color='darkred', marker='o', linestyle='None')
-    #     plt.plot(x_coords_lca, y_coords_lca, color='grey', marker='o', linestyle='None', alpha=0.5)
-
-    #     plt.xlim(0, circumference)
-    #     plt.ylim(0, 50)
-    #     plt.gca().set_aspect('equal', adjustable='box')
-    #     # Add text labels
-    #     plt.text(column / 2, 45, 'RCC', ha='center')
-    #     plt.text(column + (column * 2 - column) / 2, 45, 'LCC', ha='center')
-    #     plt.text(column * 2 + (circumference - column * 2) / 2, 45, 'ACC', ha='center')
-    #     plt.xlabel('coronary cusps')
-    #     plt.ylabel('height')
-    #     plt.title('Distribution of ostia')
-    #     plt.show()
-
     def plotter(self):
         circumference = max(self.df['adjusted_circumference'])
         column = circumference / 3
@@ -143,8 +100,9 @@ class OstialDistribution:
         plt.plot(arch_x_acc, arch_y, 'black')
 
         # plot lines between points (xcoord_rca, ycoord_rca) and (xcoord_lca, ycoord_lca)
-        for x1, y1, x2, y2 in zip(x_coords_rca, y_coords_rca, x_coords_lca, y_coords_lca):
-            plt.plot([x1, x2], [y1, y2], color='grey', linestyle='--', alpha=0.5)
+        if self.config.plot_ostia_distribution.plot_lines:
+            for x1, y1, x2, y2 in zip(x_coords_rca, y_coords_rca, x_coords_lca, y_coords_lca):
+                plt.plot([x1, x2], [y1, y2], color='grey', linestyle='--', alpha=0.5)
 
         # Plot the data points
         plt.plot(x_coords_rca, y_coords_rca, color='darkred', marker='o', linestyle='None')
@@ -162,7 +120,6 @@ class OstialDistribution:
         plt.title('Distribution of ostia')
         plt.show()
 
-
-df = OstialDistribution()()
+# df = OstialDistribution()()
 # print(df.head(5))
 # print(df['ccta_stj_d'].head(100))
