@@ -15,11 +15,21 @@ followup$ffr_0.8 <- index$ffr_0.8
 followup$timeto_censor_y
 followup$mace
 
-median(followup$timeto_censor_y, na.rm = TRUE)
-quantile(followup$timeto_censor_y, probs = c(0.25, 0.75), na.rm = TRUE)
+median <- median(followup$timeto_censor_y, na.rm = TRUE)
+quantile <- quantile(followup$timeto_censor_y, probs = c(0.25, 0.75), na.rm = TRUE)
 
-survfit(Surv(timeto_censor_y, mace) ~ ffr_0.8, data = followup) %>% 
-    ggsurvplot(pval = TRUE, conf.int = FALSE, risk.table = TRUE, legend.title = "FFR < 0.8", legend.labs = c("No", "Yes"), palette = "jco", xlab = "Time (years)", ylab = "Survival probability", legend = "right", xlim = c(0,5))
+surv_fit <- survfit(Surv(timeto_censor_y, mace) ~ ffr_0.8, data = followup)
+gg <- ggsurvplot(surv_fit, pval = TRUE, conf.int = FALSE, risk.table = TRUE, 
+                   legend.title = "FFR < 0.8", legend.labs = c("No", "Yes"), 
+                   palette = "jco", xlab = "Time (years)", ylab = "Survival probability", 
+                   legend = "right", xlim = c(0,5))
 
-followup %>%
-    select(record_id, timeto_censor_y, mace, ffr_0.8, ae_mace_type, ae_mace_type_2, ae_mace_type_3, ae_mace_type_4) %>% print(n = 50)
+# Save plot
+# ggsave("C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/figures/survival_curve.jpg", plot = print(gg), width = 3.3, height = 2.2, dpi = 1000 )
+ggsave("C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/statistical_analysis/figures/survival_curve.jpg", 
+       plot = gg$plot, width = 6, height = 4, dpi = 1000)
+
+print(paste0("Median survival time: ", median, " (", quantile[1], "-", quantile[2], ") years"))
+
+# followup %>%
+#     select(record_id, timeto_censor_y, mace, ffr_0.8, ae_mace_type, ae_mace_type_2, ae_mace_type_3, ae_mace_type_4) %>% print(n = 50)

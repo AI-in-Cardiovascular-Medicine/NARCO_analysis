@@ -1,10 +1,13 @@
 import rpy2.robjects as robjects
 from rpy2.robjects import pandas2ri
+import colorama
+from colorama import Fore, Style
 
 
 class StatisticalAnalysisR:
     def __init__(self, config) -> None:
         self.config = config
+        colorama.init(autoreset=True)
         robjects.r(
             '''
             library(tidyverse)
@@ -28,9 +31,13 @@ class StatisticalAnalysisR:
 
     def __call__(self):
         self.demographics()
+        print(Fore.GREEN + "Demographics script finished." + Style.RESET_ALL)
         self.log_regression()
+        print(Fore.GREEN + "Log regression script finished." + Style.RESET_ALL)
         self.invasive_data()
+        print(Fore.GREEN + "Invasive data script finished." + Style.RESET_ALL)
         self.survival_analysis()
+        print(Fore.GREEN + "Survival analysis script finished." + Style.RESET_ALL)
 
     def demographics(self):
         if self.config.statistical_analysis.demographics:

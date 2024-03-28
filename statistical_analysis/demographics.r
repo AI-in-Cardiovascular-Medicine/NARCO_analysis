@@ -423,5 +423,5 @@ saveRDS(ffr0.8_df_clean, file = paste0(yaml$demographics$output_dir_data, "/ffr0
 ffr_0.8 <- readRDS("C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/statistical_analysis/data/ffr0.8_df.rds")
 ffr_0.8 <- ffr_0.8 %>% mutate(p_value_classic_holm = p.adjust(`P value classic`, method = "holm"),
                                 p_value_sim_holm = p.adjust(`P value simulated`, method = "holm"))
-R.version.string
+
 write.csv(ffr_0.8, "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/statistical_analysis/data/ffr0.8_df.csv", row.names = FALSE)

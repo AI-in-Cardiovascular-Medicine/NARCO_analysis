@@ -17,6 +17,7 @@ openpyxl = "*"
 matplotlib = "*"
 tqdm = "*"
 rpy2 = "*"
+colorama = "*"
 
 [tool.poetry.group.dev.dependencies]
 autohooks = "^23.1.0"

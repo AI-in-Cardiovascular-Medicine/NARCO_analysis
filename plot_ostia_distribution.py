@@ -18,6 +18,9 @@ class OstialDistribution:
         self.scale()
         self.plotter()
 
+        self.df.to_excel(
+            os.path.join(self.config.plot_ostia_distribution.output_dir_data, 'additional_ccta_data.xlsx'), index=False
+        )
         return self.df
 
     def create_dataframe(self):
@@ -120,7 +123,7 @@ class OstialDistribution:
         plt.ylabel('height')
         plt.title('Distribution of ostia')
         
-        output_dir = self.config.plot_ostia_distribution.output_dir
+        output_dir = self.config.plot_ostia_distribution.output_dir_fig
         os.makedirs(output_dir, exist_ok=True)  # Ensure the output directory exists
         output_file = "ostial_distribution.png"
         output_path = os.path.join(output_dir, output_file)
