@@ -10,34 +10,39 @@ class StatisticalAnalysisR:
         colorama.init(autoreset=True)
         robjects.r(
             '''
-            library(tidyverse)
-            library(ggplot2)
-            library(readxl)
-            library(yaml)
-            library(writexl)
-            library(DescTools)
-            library(infer)
-            library(ggpubr)
-            library(broom)
-            library(yardstick)
-            library(pROC)
-            library(randomForest)
-            library(readxl)
-            library(car)
-            library(survival)
-            library(survminer)     
+            if (!require("pacman")) {install.packages("pacman")}
+            library(pacman)
+            p_load(
+                tidyverse,
+                ggplot2,
+                readxl,
+                yaml,
+                writexl,
+                DescTools,
+                infer,
+                ggpubr,
+                broom,
+                yardstick,
+                pROC,
+                randomForest,
+                readxl,
+                car,
+                survival,
+                survminer,
+                lmtest
+            )     
         '''
         )
 
     def __call__(self):
         self.demographics()
-        print(Fore.GREEN + "Demographics script finished." + Style.RESET_ALL)
+        print(Fore.RED + "Demographics script finished." + Style.RESET_ALL)
         self.log_regression()
-        print(Fore.GREEN + "Log regression script finished." + Style.RESET_ALL)
+        print(Fore.RED + "Log regression script finished." + Style.RESET_ALL)
         self.invasive_data()
-        print(Fore.GREEN + "Invasive data script finished." + Style.RESET_ALL)
+        print(Fore.RED + "Invasive data script finished." + Style.RESET_ALL)
         self.survival_analysis()
-        print(Fore.GREEN + "Survival analysis script finished." + Style.RESET_ALL)
+        print(Fore.RED + "Survival analysis script finished." + Style.RESET_ALL)
 
     def demographics(self):
         if self.config.statistical_analysis.demographics:

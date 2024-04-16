@@ -125,13 +125,18 @@ class AnalysisDfs:
                 elif row['caa_origin___1'] == 1 or row['caa_origin___2'] == 1:
                     self.process_caa_origin(row, i, 'ccta_stj_lca', 'caa_high_coronary___1', config)
 
+                if row['ccta_ostial_w'] / row['ccta_ostial_h'] < 0.5:
+                    self.baseline.loc[i, 'caa_slo'] = 1
+                else:
+                    self.baseline.loc[i, 'caa_slo'] = 0
+
                 if (
                     row['ccta_ostial_elliptic'] > config.first_analysis.slit_like_ostium_ratio
-                    and row['ccta_ostial_a'] / row['ccta_dist_a'] <= config.first_analysis.percent_stenosis
+                    and 1 - (row['ccta_ostial_a'] / row['ccta_dist_a']) <= config.first_analysis.percent_stenosis
                 ):
-                    self.baseline.loc[i, 'caa_ostial_elliptic'] = 1
+                    self.baseline.loc[i, 'caa_slo_owndef'] = 1
                 else:
-                    self.baseline.loc[i, 'caa_ostial_elliptic'] = 0
+                    self.baseline.loc[i, 'caa_slo_owndef'] = 0
 
                 if (
                     row['ccta_ostial_elliptic'] > config.first_analysis.elliptic_ratio
@@ -141,7 +146,7 @@ class AnalysisDfs:
                 else:
                     self.baseline.loc[i, 'caa_ostial_elliptic'] = 0
 
-                if row['ccta_mla_a'] / row['ccta_dist_a'] <= config.first_analysis.percent_stenosis:
+                if 1 - (row['ccta_mla_a'] / row['ccta_dist_a']) <= config.first_analysis.percent_stenosis:
                     self.baseline.loc[i, 'caa_pn'] = 1
                 else:
                     self.baseline.loc[i, 'caa_pn'] = 0
@@ -158,7 +163,7 @@ class AnalysisDfs:
 
                 if (
                     row['caa_im'] == 1
-                    and row['ccta_mla_c'] / row['ccta_dist_c'] <= config.first_analysis.percent_stenosis
+                    and 1 - (row['ccta_mla_c'] / row['ccta_dist_c']) <= config.first_analysis.percent_stenosis
                 ):
                     self.baseline.loc[i, 'caa_hypoplasia'] = 1
                 else:
@@ -219,5 +224,3 @@ class AnalysisDfs:
 
             self.follow_up.loc[i, 'timeto_censor_y'] = global_censor
             self.follow_up.loc[i, 'mace'] = int(global_mace)
-
-
