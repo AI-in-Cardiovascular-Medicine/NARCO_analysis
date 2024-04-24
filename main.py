@@ -36,3 +36,4 @@ def data_preparation(config: DictConfig) -> None:
 
 if __name__ == '__main__':
     data_preparation()
+    

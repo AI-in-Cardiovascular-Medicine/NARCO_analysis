@@ -45,7 +45,7 @@ r_script_runner:
   active: True
 
 statistical_analysis:
-  demographics: True
+  demographics: False
   log_regression: True
   invasive_data: True
   survival_analysis: True
@@ -90,7 +90,7 @@ demographics:
     Fatigue: hx_init_pres_type___6
     Arrythmia: hx_init_pres_type___7
     Gastrointestinal symptoms: hx_init_pres_type___8
-    MYocardial infarction: hx_init_pres_type___9
+    Myocardial infarction: hx_init_pres_type___9
     Sudden cardiac death: hx_init_pres_type___10
     Aborted SCD: hx_init_pres_type___11
     Other symptom: hx_init_pres_type___12
@@ -172,7 +172,8 @@ demographics:
     CCTA acute take-off angle degrees: ccta_aa_degree
     CCTA intramural course length: ccta_imc_length
     CCTA MLA ellipticity: ccta_mla_elliptic
-    CCTA proximal narrowing [%]: ccta_pn_dist
+    CCTA OA lumen narrowing [%]: ccta_ostial_pn
+    CCTA IM lumen narrowing [%]: ccta_pn_dist
     Agatston score: ccta_agatston
     CCTA dominance: ccta_dominance
     # CCTA CAD: ccta_cad

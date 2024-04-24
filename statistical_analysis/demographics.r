@@ -32,7 +32,18 @@ baseline <- baseline %>%
     ),
     ffr_0.8 = ifelse(inv_ffrdobu <= 0.8, 1, 0),
     ffr_0.81 = ifelse(inv_ffrdobu <= 0.81, 1, 0),
-    slo_cheezum = ccta_ostial_w / (2 * sqrt(ccta_dist_a / pi))
+    slo_cheezum = ccta_ostial_w / (2 * sqrt(ccta_dist_a / pi)), 
+    right_0_left_1 = ifelse(caa_origin___0 == 1 | caa_origin___4 == 1, 0, 1),
+    cad_any_rca = ifelse(inv_cad_loc___9 == 1 | inv_cad_loc___10 == 1 | inv_cad_loc___11 == 1, 1, 0),
+    cad_any_lcx = ifelse(inv_cad_loc___6 == 1 | inv_cad_loc___7 == 1 | inv_cad_loc___8 == 1, 1, 0),
+    cad_any_lad = ifelse(inv_cad_loc___0 == 1 | inv_cad_loc___1 == 1 | inv_cad_loc___2 == 1 | inv_cad_loc___3 == 1 | inv_cad_loc___4 == 1 | inv_cad_loc___5 == 1, 1, 0),
+    cad_relevant_rca = ifelse(inv_cad_perc_rcaprox > 1 | inv_cad_perc_rcamid > 1 | inv_cad_perc_rcadist > 1, 1, 0),
+    cad_relevant_cx = ifelse(inv_cad_perc_cxprox > 1 | inv_cad_perc_cxmid > 1 | inv_cad_perc_cxdist > 1, 1, 0),
+    cad_relevant_lad = ifelse(inv_cad_perc_lm > 1 | inv_cad_perc_ladprox > 1 | inv_cad_perc_ladmid > 1 | inv_cad_perc_laddist > 1 | inv_cad_perc_diag1 > 1 | inv_cad_perc_diag2 > 1, 1, 0),
+    cad_any_anomalous = ifelse((right_0_left_1 == 0 & cad_any_rca == 1) | (right_0_left_1 == 1 & (cad_any_lcx == 1 | cad_any_lad == 1)), 1, 0),
+    cad_relevant_anomalous = ifelse((right_0_left_1 == 0 & cad_relevant_rca == 1) | (right_0_left_1 == 1 & (cad_relevant_cx == 1 | cad_relevant_lad == 1)), 1, 0),
+    ccta_ostial_pn = (1 - (ccta_ostial_a / ccta_dist_a)) * 100,
+    ccta_pn_dist = (1 - (ccta_mla_a / ccta_dist_a)) * 100,
   )
 
 ## FACTORIZE ##########################################################################################################
@@ -69,11 +80,6 @@ for (var in binary_vars) {
 
 saveRDS(baseline, file = paste0(yaml$demographics$output_dir_data, "/baseline.rds"))
 ############################################################################################################
-# Two splits: one for benign and malign and the other for ffr above and below equal 0.8
-# check if contains any NA --> shouldn't be the case, if yes check database
-baseline %>% select(record_id, caa_malignancy) %>% filter(is.na(caa_malignancy))
-baseline %>% select(record_id, inv_ffrdobu, caa_malignancy) %>% filter(is.na(inv_ffrdobu) & caa_malignancy == 1)
-
 ## CREATE RESULTS DATAFRAME ##########################################################################################################
 # initialize the dataframe
 dataframe_calculations <- data.frame(variable = character(),

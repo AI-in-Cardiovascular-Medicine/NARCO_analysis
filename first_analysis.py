@@ -146,7 +146,7 @@ class AnalysisDfs:
                 else:
                     self.baseline.loc[i, 'caa_ostial_elliptic'] = 0
 
-                if 1 - (row['ccta_mla_a'] / row['ccta_dist_a']) <= config.first_analysis.percent_stenosis:
+                if 1 - (row['ccta_mla_a'] / row['ccta_dist_a']) >= config.first_analysis.percent_stenosis:
                     self.baseline.loc[i, 'caa_pn'] = 1
                 else:
                     self.baseline.loc[i, 'caa_pn'] = 0

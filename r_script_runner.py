@@ -29,7 +29,8 @@ class StatisticalAnalysisR:
                 car,
                 survival,
                 survminer,
-                lmtest
+                lmtest,
+                corrplot
             )     
         '''
         )
