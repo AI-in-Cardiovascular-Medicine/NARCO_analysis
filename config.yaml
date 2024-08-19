@@ -9,18 +9,20 @@ hydra:
     dir: .
 
 data_prepper:
-  active: False
-  # redcap_database: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/L1958Narco_DATA_2024-03-28_1135.csv"
-  redcap_database: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/backup_databases/L1958Narco_DATA_2024-03-13_1043.csv"
-  output_dir: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/dataframes"
+  active: True
+  # redcap_database: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/L1958Narco_DATA_2024-06-28_0948.csv" # CT old measurements
+  redcap_database: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/L1958Narco_DATA_2024-07-16_1805.csv" # invasive database
+  # redcap_database: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/L1958Narco_DATA_2024-07-24_1618.csv" # CT new measurements
+  output_dir: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/dataframes" 
 
-data_sorter:
+demographics_table:
   active: False
-  input_file: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/dataframes/complete_dataframe.xlsx"
+  input_file: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/dataframes/baseline.xlsx"
+  dict: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/dataframes/dictionary.csv"
   output_dir: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/dataframes"
 
 first_analysis:
-  active: False
+  active: True
   input_file: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/dataframes/complete_dataframe.xlsx"
   output_dir: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/dataframes"
   nonnormal:
@@ -45,14 +47,16 @@ r_script_runner:
   active: True
 
 statistical_analysis:
-  demographics: False
+  r_data_prepper: True
+  demographics: True
   log_regression: True
-  invasive_data: True
+  invasive_data: False
   survival_analysis: True
 
+  input_r_data_prepper: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/statistical_analysis/r_data_prepper.r"
   input_demographics: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/statistical_analysis/demographics.r"
   input_log_regression: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/statistical_analysis/log_regression.r"
-  input_invasive_data: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/statistical_analysis/invasive_data.r"
+  input_invasive_data: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/statistical_analysis/invasive_short.r"
   input_survival_analysis: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/statistical_analysis/survival_analysis.r"
 
 demographics:
@@ -75,7 +79,150 @@ demographics:
   output_dir_data: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/statistical_analysis/data"
   output_dir_figures: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/statistical_analysis/figures"
 
-  dict_rename: 
+  # dict_rename: 
+  #   Sex Female: sex_0_male_1_female
+  #   Age: age
+  #   BMI: bmi
+  #   BSA: bsa
+  #   CAA known before presentation: hx_caa_known
+  #   No symptoms: hx_init_pres_type___0
+  #   Angina pectoris: hx_init_pres_type___1
+  #   Syncope: hx_init_pres_type___2
+  #   Dyspnea: hx_init_pres_type___3
+  #   # Palpitations: hx_init_pres_type___4
+  #   # Presyncope: hx_init_pres_type___5
+  #   # Fatigue: hx_init_pres_type___6
+  #   # Arrythmia: hx_init_pres_type___7
+  #   # Gastrointestinal symptoms: hx_init_pres_type___8
+  #   # Myocardial infarction: hx_init_pres_type___9
+  #   # Sudden cardiac death: hx_init_pres_type___10
+  #   # Aborted SCD: hx_init_pres_type___11
+  #   # Other symptom: hx_init_pres_type___12
+  #   Atypical angina: hx_sym_ap
+  #   CCS: hx_sym_ap_ccs
+  #   AP during psychological stress: hx_sym_ap_stress
+  #   Syncope during exercise: hx_sym_sync_exercise
+  #   NYHA: hx_sym_dysp_nyha
+  #   Other symptom during exercise: hx_sym_div_exercise
+  #   History hypertension: hx_htn
+  #   History diabetes mellitus: hx_dm
+  #   History dyslipidemia: hx_chol
+  #   Family history CAD: hx_fhx___1
+  #   Family history CAA: hx_fhx___2
+  #   Family history SCD: hx_fhx___3
+  #   Family history other heart disease: hx_fhx___4
+  #   No known family history: hx_fhx___0
+  #   History of tobacco: hx_hxtobacco
+  #   # Aspirin: hx_bm_asp
+  #   # Statin: hx_bm_statin
+  #   # Clopidogrel: hx_bm_clopi
+  #   # Ticagrelor: hx_bm_ticagrelor
+  #   # Prasugrel: hx_bm_prasugrel
+  #   # Calcium antagonist: hx_bm_calcblock
+  #   # Betablocker: hx_bm_betablock
+  #   # Nitrates: hx_bm_nitrates
+  #   # NOAK: hx_bm_noak
+  #   # Vitamin K-antagonist: hx_bm_antico
+  #   # ACE inhibitor: hx_bm_ace
+  #   # ARB: hx_bm_arb
+  #   # Diuretics: hx_bm_diuretic
+  #   Sports activity: sports_yn
+  #   Sports level: sports_level
+  #   # Sports static component: sports_static_component
+  #   # Sports dynamic component: sports_dynamic_component
+  #   # Symptoms during sport: sports_symptoms
+  #   # Sports activity childhood: sports_yn_ch
+  #   # Symptoms during sport childhood: sports_ch_symp
+  #   # Sports level childhood: sports_level_ch
+  #   # Sports static component childhood: sports_static_component_ch
+  #   # Sports dynamic component childhood: sports_dynamic_comp_ch
+  #   # Modality diagnosis CAA: caa_modality
+  #   # R-AAOCA: caa_origin___0
+  #   # LAD-AAOCA: caa_origin___1
+  #   # LM-AAOCA: caa_origin___2
+  #   # Single right: caa_origin___3
+  #   # Single left: caa_origin___4
+  #   # Cx-AAOCA: caa_origin___5
+  #   # Other CAA: caa_origin___6
+  #   # Two ostia: caa_ostia
+  #   # Interarterial course: caa_course___0
+  #   # Subpulmonic course: caa_course___1
+  #   # Prepulmonic course: caa_course___2
+  #   # Retroaortic course: caa_course___3
+  #   # Retrocardiac course: caa_course___4
+  #   # Other course: caa_course___5
+  #   # High take-off RCA: caa_high_coronary___0
+  #   # High take-off LCA: caa_high_coronary___1
+  #   Slit-like ostium: caa_slo
+  #   Elliptic ratio: caa_elliptic
+  #   Proximal narrowing: caa_pn
+  #   Acute take-off angle: caa_angle
+  #   # Intramural course: caa_im
+  #   # Malignant CAA: caa_malignancy
+  #   # Echocardiography done: dgn_diagtool___1
+  #   # LVEF [%] echocardiography: dgn_echo_ef
+  #   # WMA echocardiography: dgn_echo_wma
+  #   # Diastolic function echocardiography: dgn_echo_diafun
+  #   # Pathological ECG: dgn_ecg_classification
+  #   # Photon counting: ccta_photon
+  #   # CCTA quality: ccta_quali
+  #   CCTA ostial area: ccta_ostial_a
+  #   CCTA ostial height: ccta_ostial_h
+  #   CCTA ostial width: ccta_ostial_w
+  #   CCTA ostial ellipticity: ccta_ostial_elliptic
+  #   CCTA minimal lumen area: ccta_mla_a
+  #   CCTA minimal lumen height: ccta_mla_h
+  #   CCTA minimal lumen width: ccta_mla_w
+  #   CCTA acute take-off angle degrees: ccta_aa_degree
+  #   CCTA intramural course length: ccta_imc_length
+  #   CCTA MLA ellipticity: ccta_mla_elliptic
+  #   CCTA OA lumen narrowing [%]: ccta_ostial_pn
+  #   CCTA IM lumen narrowing [%]: ccta_pn_dist
+  #   Agatston score: ccta_agatston
+  #   CCTA dominance: ccta_dominance
+  #   # CCTA CAD: ccta_cad
+  #   # Ergometry: funct_type___0
+  #   # Ergometry findings: funct_ergo_findings
+  #   Invasive dominance: inv_dominance
+  #   # Invasive CAD: inv_cad
+  #   CAD (>50%) in LAD: cad_relevant_lad
+  #   CAD (>50%) in LCX: cad_relevant_cx
+  #   CAD (>50%) in RCA: cad_relevant_rca
+  #   # CAD in AAOCA: cad_any_anomalous
+  #   Relevant CAD in AAOCA: cad_relevant_anomalous
+  #   Invasive resting heart rate: inv_rest_hr
+  #   Invasive systolic aortic pressure rest: inv_rest_aosys
+  #   Invasive diastolic aortic pressure rest: inv_rest_aodia
+  #   Invasive mean aortic pressure rest: inv_rest_aomean
+  #   # Invasive FFRadenosine: inv_ffrado
+  #   MLA IVUSrest: inv_ivusrest_mla
+  #   Invasive FFRdobutamine: inv_ffrdobu
+  #   Symptoms during FFRdobutamine: inv_ffrdobu_symp
+  #   Invasive dobutamine heart rate: inv_dobu_hr
+  #   Invasive systolic aortic pressure stress: inv_dobu_aosys
+  #   Invasive diastolic aortic pressure stress: inv_dobu_aodia
+  #   Invasive mean aortic pressure stress: inv_dobu_aomean
+  #   # MLA IVUSstress: inv_ivusdobu_mla
+  #   # Indication for invasive testing: synp_inv
+  #   Underwent invasive testing: synp_inv_yn
+  #   # Indication for functional testing: synp_funct
+  #   Underwent functional testing: synp_funct_yn
+  #   # Hemodynamically relevant: synp_hemo
+  #   Symptoms linked to findings: synp_symp
+  #   # Indication for surgery: synp_surgery
+  #   Underwent surgery: synp_surgery_yn
+  #   # Indication for stenting: synp_stent
+  #   Underwent stenting: synp_stent_yn
+  #   Indication for sports restriction: synp_sport
+  #   Start aspirin: synp_treatment_type___0
+  #   Start betablocker: synp_treatment_type___1
+  #   Start statin: synp_treatment_type___2
+  #   Start other: synp_treatment_type___3
+  #   Change in treatment: synp_treatment
+  #   Sports classification: sports_classification
+  #   Sports classification childhood: sports_classification_ch
+
+  dict_rename: # data table invasive
     Sex Female: sex_0_male_1_female
     Age: age
     BMI: bmi
@@ -85,15 +232,6 @@ demographics:
     Angina pectoris: hx_init_pres_type___1
     Syncope: hx_init_pres_type___2
     Dyspnea: hx_init_pres_type___3
-    Palpitations: hx_init_pres_type___4
-    Presyncope: hx_init_pres_type___5
-    Fatigue: hx_init_pres_type___6
-    Arrythmia: hx_init_pres_type___7
-    Gastrointestinal symptoms: hx_init_pres_type___8
-    Myocardial infarction: hx_init_pres_type___9
-    Sudden cardiac death: hx_init_pres_type___10
-    Aborted SCD: hx_init_pres_type___11
-    Other symptom: hx_init_pres_type___12
     Atypical angina: hx_sym_ap
     CCS: hx_sym_ap_ccs
     AP during psychological stress: hx_sym_ap_stress
@@ -109,102 +247,28 @@ demographics:
     Family history other heart disease: hx_fhx___4
     No known family history: hx_fhx___0
     History of tobacco: hx_hxtobacco
-    Aspirin: hx_bm_asp
-    Statin: hx_bm_statin
-    Clopidogrel: hx_bm_clopi
-    Ticagrelor: hx_bm_ticagrelor
-    Prasugrel: hx_bm_prasugrel
-    Calcium antagonist: hx_bm_calcblock
-    Betablocker: hx_bm_betablock
-    Nitrates: hx_bm_nitrates
-    NOAK: hx_bm_noak
-    Vitamin K-antagonist: hx_bm_antico
-    ACE inhibitor: hx_bm_ace
-    ARB: hx_bm_arb
-    Diuretics: hx_bm_diuretic
     Sports activity: sports_yn
     Sports level: sports_level
-    # Sports static component: sports_static_component
-    # Sports dynamic component: sports_dynamic_component
-    # Symptoms during sport: sports_symptoms
-    # Sports activity childhood: sports_yn_ch
-    # Symptoms during sport childhood: sports_ch_symp
-    # Sports level childhood: sports_level_ch
-    # Sports static component childhood: sports_static_component_ch
-    # Sports dynamic component childhood: sports_dynamic_comp_ch
-    # Modality diagnosis CAA: caa_modality
-    R-AAOCA: caa_origin___0
-    LAD-AAOCA: caa_origin___1
-    LM-AAOCA: caa_origin___2
-    Single right: caa_origin___3
-    Single left: caa_origin___4
-    # Cx-AAOCA: caa_origin___5
-    Other CAA: caa_origin___6
-    Two ostia: caa_ostia
-    Interarterial course: caa_course___0
-    # Subpulmonic course: caa_course___1
-    # Prepulmonic course: caa_course___2
-    # Retroaortic course: caa_course___3
-    # Retrocardiac course: caa_course___4
-    Other course: caa_course___5
-    High take-off RCA: caa_high_coronary___0
-    High take-off LCA: caa_high_coronary___1
-    Slit-like ostium: caa_slo
-    Elliptic ratio: caa_elliptic
-    Proximal narrowing: caa_pn
-    Acute take-off angle: caa_angle
-    Intramural course: caa_im
-    # Malignant CAA: caa_malignancy
-    # Echocardiography done: dgn_diagtool___1
-    # LVEF [%] echocardiography: dgn_echo_ef
-    # WMA echocardiography: dgn_echo_wma
-    # Diastolic function echocardiography: dgn_echo_diafun
-    # Pathological ECG: dgn_ecg_classification
-    Photon counting: ccta_photon
-    CCTA quality: ccta_quali
-    CCTA ostial area: ccta_ostial_a
-    CCTA ostial height: ccta_ostial_h
-    CCTA ostial width: ccta_ostial_w
-    CCTA ostial ellipticity: ccta_ostial_elliptic
-    CCTA minimal lumen area: ccta_mla_a
-    CCTA minimal lumen height: ccta_mla_h
-    CCTA minimal lumen width: ccta_mla_w
-    CCTA acute take-off angle degrees: ccta_aa_degree
-    CCTA intramural course length: ccta_imc_length
-    CCTA MLA ellipticity: ccta_mla_elliptic
-    CCTA OA lumen narrowing [%]: ccta_ostial_pn
-    CCTA IM lumen narrowing [%]: ccta_pn_dist
-    Agatston score: ccta_agatston
-    CCTA dominance: ccta_dominance
-    # CCTA CAD: ccta_cad
-    # Ergometry: funct_type___0
-    # Ergometry findings: funct_ergo_findings
     Invasive dominance: inv_dominance
-    Invasive CAD: inv_cad
-    CAD in AAOCA: cad_any_anomalous
+    CAD (>50%) in LAD: cad_relevant_lad
+    CAD (>50%) in LCX: cad_relevant_cx
+    CAD (>50%) in RCA: cad_relevant_rca
     Relevant CAD in AAOCA: cad_relevant_anomalous
     Invasive resting heart rate: inv_rest_hr
     Invasive systolic aortic pressure rest: inv_rest_aosys
     Invasive diastolic aortic pressure rest: inv_rest_aodia
     Invasive mean aortic pressure rest: inv_rest_aomean
-    # Invasive FFRadenosine: inv_ffrado
-    MLA IVUSrest: inv_ivusrest_mla
+    Invasive FFRadenosine: inv_ffrado
     Invasive FFRdobutamine: inv_ffrdobu
     Symptoms during FFRdobutamine: inv_ffrdobu_symp
     Invasive dobutamine heart rate: inv_dobu_hr
     Invasive systolic aortic pressure stress: inv_dobu_aosys
     Invasive diastolic aortic pressure stress: inv_dobu_aodia
     Invasive mean aortic pressure stress: inv_dobu_aomean
-    # MLA IVUSstress: inv_ivusdobu_mla
-    Indication for invasive testing: synp_inv
     Underwent invasive testing: synp_inv_yn
-    Indication for functional testing: synp_funct
     Underwent functional testing: synp_funct_yn
-    Hemodynamically relevant: synp_hemo
     Symptoms linked to findings: synp_symp
-    Indication for surgery: synp_surgery
     Underwent surgery: synp_surgery_yn
-    Indication for stenting: synp_stent
     Underwent stenting: synp_stent_yn
     Indication for sports restriction: synp_sport
     Start aspirin: synp_treatment_type___0
@@ -213,4 +277,11 @@ demographics:
     Start other: synp_treatment_type___3
     Change in treatment: synp_treatment
     Sports classification: sports_classification
-    Sports classification childhood: sports_classification_ch
+    MLA rest: inv_ivusrest_mla
+    MLA lumen narrowing rest: inv_ivusrest_mla_ln
+    MLA any stenosis (>=50%) rest: inv_ivusrest_mla_50
+    MLA any stenosis (>=70%) rest: inv_ivusrest_mla_70
+    MLA stress: inv_ivusdobu_mla
+    MLA lumen narrowing stress: inv_ivusdobu_mla_ln_any
+    MLA any stenosis (>=50%) stress: inv_ivusdobu_mla_50
+    MLA any stenosis (>=70%) stress: inv_ivusdobu_mla_70

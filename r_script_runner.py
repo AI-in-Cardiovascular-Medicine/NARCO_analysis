@@ -7,8 +7,8 @@ from colorama import Fore, Style
 class StatisticalAnalysisR:
     def __init__(self, config) -> None:
         self.config = config
-        colorama.init(autoreset=True)
-        robjects.r(
+        colorama.init(autoreset=True) 
+        robjects.r( # fill in required packages, will install if not available for user
             '''
             if (!require("pacman")) {install.packages("pacman")}
             library(pacman)
@@ -36,7 +36,9 @@ class StatisticalAnalysisR:
         )
 
     def __call__(self):
-        self.demographics()
+        self.r_data_prepper()
+        print(Fore.RED + "R data preparation script finished." + Style.RESET_ALL)
+        self.demographics() # adds more console feedback, can be removed if not needed
         print(Fore.RED + "Demographics script finished." + Style.RESET_ALL)
         self.log_regression()
         print(Fore.RED + "Log regression script finished." + Style.RESET_ALL)
@@ -44,6 +46,13 @@ class StatisticalAnalysisR:
         print(Fore.RED + "Invasive data script finished." + Style.RESET_ALL)
         self.survival_analysis()
         print(Fore.RED + "Survival analysis script finished." + Style.RESET_ALL)
+
+    def r_data_prepper(self):
+        if self.config.statistical_analysis.r_data_prepper:
+            with open(self.config.statistical_analysis.input_r_data_prepper, 'r') as file:
+                r_script = file.read()
+
+            robjects.r(r_script)
 
     def demographics(self):
         if self.config.statistical_analysis.demographics:

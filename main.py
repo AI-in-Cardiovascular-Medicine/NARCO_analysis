@@ -5,7 +5,7 @@ from omegaconf import DictConfig
 from loguru import logger
 
 from data_prepper import DataPrepper
-from data_sorter import plotter
+from demographics import Demographics
 from first_analysis import AnalysisDfs
 from plot_ostia_distribution import OstialDistribution
 from r_script_runner import StatisticalAnalysisR
@@ -17,8 +17,9 @@ def data_preparation(config: DictConfig) -> None:
         data_prepper = DataPrepper(config)  # init class
         data = data_prepper()  # call class
 
-    if config.data_sorter.active:
-        # _ = plotter(data)
+    if config.demographics_table.active:
+        demographics = Demographics(config)
+        _ = demographics()
         pass
 
     if config.first_analysis.active:
@@ -36,4 +37,3 @@ def data_preparation(config: DictConfig) -> None:
 
 if __name__ == '__main__':
     data_preparation()
-    

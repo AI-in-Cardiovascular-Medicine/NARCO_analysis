@@ -31,5 +31,42 @@ ggsave("C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/statistical_anal
 
 print(paste0("Median survival time: ", median, " (", quantile[1], "-", quantile[2], ") years"))
 
-# followup %>%
-#     select(record_id, timeto_censor_y, mace, ffr_0.8, ae_mace_type, ae_mace_type_2, ae_mace_type_3, ae_mace_type_4) %>% print(n = 50)
+followup %>%
+    select(record_id, timeto_censor_y, mace, ffr_0.8, ae_mace_type, ae_mace_type_2, ae_mace_type_3, ae_mace_type_4) %>% print(n = 50)
+
+# test of proportion for 1/38 and 2/12
+prop.test(c(1, 2), c(38, 12), correct = FALSE)
+
+followup <- followup %>%
+  mutate(
+    fu_symptoms = if_any(
+      # Select all columns that start with "sym_fu___" and exclude "sym_fu___0" variants
+      select(., starts_with("sym_fu___")) %>% select(-sym_fu___0, -sym_fu___0_y3, -sym_fu___0_y5) %>% colnames(),
+      ~ . == 1
+    ) * 1 # Convert logical TRUE/FALSE to 1/0
+  )
+
+followup <- followup %>%
+  mutate(
+    fu_nosymptoms = if_any(
+      starts_with("sym_fu___0"),
+      ~ . == 1
+    ) * 1 # Convert logical TRUE/FALSE to 1/0
+  )
+
+followup <- followup %>%
+    mutate(
+        fu_any_symptoms = ifelse(fu_symptoms == 1, 1, ifelse(fu_nosymptoms == 1, 0, NA))
+    )
+
+baseline <- baseline %>% filter(record_id %in% index$record_id)
+
+# calculate date diff between baseline$inv_date and followup$pf_date_fu
+baseline$inv_date <- as.Date(baseline$inv_date, format = "%Y-%m-%d")
+followup$pf_date_fu <- as.Date(followup$pf_date_fu, format = "%Y-%m-%d")
+baseline$followup_date_diff <- as.numeric(difftime(followup$pf_date_fu, baseline$inv_date, units = "days"))
+baseline$followup_date_diff <- round(baseline$followup_date_diff / 365.25, 2)
+median(baseline$followup_date_diff, na.rm = TRUE)
+quantile(baseline$followup_date_diff, probs = c(0.25, 0.75), na.rm = TRUE)
+max(baseline$followup_date_diff, na.rm = TRUE)
+min(baseline$followup_date_diff, na.rm = TRUE)
