@@ -1,6 +1,6 @@
 # NARCO_analysis
 ## Installation
-```
+```shell
     python -m venv path\to\new\env
     env\Scripts\activate.bat
     pip install poetry
@@ -8,7 +8,7 @@
 ```
 ## Usage
 After the config file is set up properly, you can run the application using:
-```
+```bash
     python main.py
 ```
 
@@ -21,8 +21,7 @@ The StatisticalAnalysisR class automatically checks for and installs the necessa
 
 The packages are automatically installed using the following R code, which is executed during the initialization of StatisticalAnalysisR:
 
-```
-r
+```r
 
 if (!require("pacman")) {install.packages("pacman")}
 library(pacman)
@@ -68,8 +67,7 @@ In your config.yaml file, specify the paths to these R scripts under the statist
 
 Example configuration:
 
-```
-yaml
+```yaml
 statistical_analysis:
   r_data_prepper: true
   input_r_data_prepper: path\to\your\script\r_data_prepper.r
@@ -90,6 +88,6 @@ statistical_analysis:
 ### Execute the R Scripts:
 
 Once your R scripts are in place and your configuration file is set, the scripts can be executed by running the main Python application:
-```
+```bash
 python main.py
 ```
