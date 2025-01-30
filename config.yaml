@@ -11,20 +11,23 @@ hydra:
 data_prepper:
   active: True
   # redcap_database: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/L1958Narco_DATA_2024-06-28_0948.csv" # CT old measurements
-  redcap_database: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/L1958Narco_DATA_2024-07-16_1805.csv" # invasive database
+  # redcap_database: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/L1958Narco_DATA_2024-07-16_1805.csv" # invasive database
   # redcap_database: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/L1958Narco_DATA_2024-07-24_1618.csv" # CT new measurements
-  output_dir: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/dataframes" 
+  # redcap_database: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis_team/L1958Narco_DATA_2024-09-03_1443.csv" # functional paper
+  # redcap_database: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis_team/L1958Narco_DATA_2024-09-24_1535.csv" # functional paper
+  redcap_database: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis_team/L1958Narco_DATA_2024-11-04_1637.csv" # invasive new data
+  output_dir: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis_team/dataframes" 
 
 demographics_table:
   active: False
-  input_file: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/dataframes/baseline.xlsx"
-  dict: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/dataframes/dictionary.csv"
-  output_dir: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/dataframes"
+  input_file: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis_team/dataframes/baseline.xlsx"
+  dict: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis_team/dataframes/dictionary.csv"
+  output_dir: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis_team/dataframes"
 
 first_analysis:
   active: True
-  input_file: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/dataframes/complete_dataframe.xlsx"
-  output_dir: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/dataframes"
+  input_file: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis_team/dataframes/complete_dataframe.xlsx"
+  output_dir: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis_team/dataframes"
   nonnormal:
   
   high_take_off: 10
@@ -38,10 +41,10 @@ first_analysis:
 plot_ostia_distribution:
   active: False
   plot_lines: False
-  input_file_baseline: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/dataframes/baseline.xlsx"
+  input_file_baseline: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis_team/dataframes/baseline.xlsx"
   input_file_distance: "C:/WorkingData/Documents/3_Research/distance.xlsx"
-  output_dir_fig: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/statistical_analysis/figures"
-  output_dir_data: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/statistical_analysis/data"
+  output_dir_fig: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis_team/statistical_analysis/figures"
+  output_dir_data: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis_team/statistical_analysis/data"
 
 r_script_runner:
   active: True
@@ -49,15 +52,15 @@ r_script_runner:
 statistical_analysis:
   r_data_prepper: True
   demographics: True
-  log_regression: True
-  invasive_data: False
+  log_regression: False
+  invasive_data: True
   survival_analysis: True
 
-  input_r_data_prepper: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/statistical_analysis/r_data_prepper.r"
-  input_demographics: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/statistical_analysis/demographics.r"
-  input_log_regression: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/statistical_analysis/log_regression.r"
-  input_invasive_data: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/statistical_analysis/invasive_short.r"
-  input_survival_analysis: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/statistical_analysis/survival_analysis.r"
+  input_r_data_prepper: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis_team/statistical_analysis/r_data_prepper.r"
+  input_demographics: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis_team/statistical_analysis/demographics.r"
+  input_log_regression: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis_team/statistical_analysis/log_regression.r"
+  input_invasive_data: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis_team/statistical_analysis/invasive_short.r"
+  input_survival_analysis: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis_team/statistical_analysis/survival_analysis.r"
 
 demographics:
   dict_variables: 
@@ -76,8 +79,8 @@ demographics:
     - "dgn_echo_diafun"
     - "dgn_ecg_classification"
   
-  output_dir_data: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/statistical_analysis/data"
-  output_dir_figures: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/statistical_analysis/figures"
+  output_dir_data: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis_team/statistical_analysis/data"
+  output_dir_figures: "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis_team/statistical_analysis/figures"
 
   # dict_rename: 
   #   Sex Female: sex_0_male_1_female

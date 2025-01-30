@@ -7,6 +7,11 @@ library(readxl)
 followup <- read_excel("C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/dataframes/follow_up.xlsx")
 followup$ae_mace_type <- factor(followup$ae_mace_type, levels = c(0, 1, 2, 3, 4), labels = c("Death", "VT", "MI", "Emergency revascularization", "ICD"))
 baseline <- readRDS("C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/statistical_analysis/data/baseline.rds")
+# index <- baseline %>% 
+#   filter(record_id != 109, patient_id != "NARCO_250") %>%
+#   filter(!is.na(funct_spect_date) | !is.na(funct_pet_date)) %>%
+#   filter(!is.na(inv_ffrdobu)) %>%
+#   select(record_id, patient_id, ffr_0.8)
 index <- baseline %>% filter(!is.na(inv_ivusrest_mla)) %>% select(record_id, patient_id, ffr_0.8)
 patho <- index %>% filter(ffr_0.8 == "yes")
 normal <- index %>% filter(ffr_0.8 == "no")
@@ -70,3 +75,5 @@ median(baseline$followup_date_diff, na.rm = TRUE)
 quantile(baseline$followup_date_diff, probs = c(0.25, 0.75), na.rm = TRUE)
 max(baseline$followup_date_diff, na.rm = TRUE)
 min(baseline$followup_date_diff, na.rm = TRUE)
+
+

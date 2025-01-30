@@ -26,6 +26,11 @@ class DataPrepper:
             (self.data['redcap_event_name'] == 'baseline_arm_1') & (self.data['redcap_repeat_instrument'].isnull())
         ]
 
+        # save blueprint as excel
+        self.blueprint.to_excel(
+            os.path.join(self.config.data_prepper.output_dir, 'blueprint.xlsx'), index=False
+        )
+
         for instrument in tqdm(self.dict_bl.keys()):
             self.baseline_arm_1(redcap_repeat_instrument=instrument)
         self.surgery_arm_1()
@@ -44,6 +49,12 @@ class DataPrepper:
             os.path.join(self.config.data_prepper.output_dir, 'complete_dataframe.xlsx'), index=False
         )
 
+        # # stupid fix since I didn't find the mistake yet
+        # self.blueprint = self.update_blueprint_from_complete()
+        
+        # self.blueprint.to_excel(
+        #     os.path.join(self.config.data_prepper.output_dir, 'complete_dataframe.xlsx'), index=False
+        # )
         return self.blueprint
 
     def baseline_arm_1(self, redcap_repeat_instrument=None):
@@ -89,13 +100,57 @@ class DataPrepper:
         self.add_columns(fu, fu_columns, '_' + decorator, treat_1_different)
         self.add_columns(fu, fu_funct_columns, '_fu_' + decorator, treat_1_different)
 
-    def add_columns(self, data, columns, suffix_separator, treat_1_different=True):
-        for i, row in data.iterrows():
-            for col in columns:
-                if treat_1_different and data['redcap_repeat_instance'][i] == 1:
-                    self.blueprint.loc[self.blueprint['record_id'] == row['record_id'], col] = row[col]
-                else:
-                    self.blueprint.loc[
-                        self.blueprint['record_id'] == row['record_id'],
-                        col + suffix_separator + str(int(row['redcap_repeat_instance'])),
-                    ] = row[col]
+    def add_columns(self, data, columns, suffix_separator, treat_1_different=True): 
+        for i, row in data.iterrows(): 
+            for col in columns: 
+                if treat_1_different and data['redcap_repeat_instance'][i] == 1: 
+                    self.blueprint.loc[self.blueprint['record_id'] == row['record_id'], col] = row[col] 
+                else: 
+                    self.blueprint.loc[ 
+                        self.blueprint['record_id'] == row['record_id'], 
+                        col + suffix_separator + str(int(row['redcap_repeat_instance'])), 
+                    ] = row[col] 
+
+    # def add_columns(self, data, columns, suffix_separator, treat_1_different=True):
+    #     exception_columns = ['hx_', 'sports_', 'caa_', 'funct_', 'synp_']
+
+    #     for i, row in data.iterrows():
+    #         for col in columns:
+    #             # Check if the column starts with any of the exception columns
+    #             if any(col.startswith(prefix) for prefix in exception_columns):
+    #                 # For the exception columns, we ALWAYS add a suffix, regardless of the instance
+    #                 if pd.notnull(row[col]):
+    #                     suffix = suffix_separator + str(int(row['redcap_repeat_instance']))
+    #                     self.blueprint.loc[self.blueprint['record_id'] == row['record_id'], col + suffix] = row[col]
+    #             else:
+    #                 # For non-exception columns (including inv_ and others)
+    #                 if treat_1_different and data['redcap_repeat_instance'][i] == 1:
+    #                     # For the first instance, we do not add a suffix
+    #                     self.blueprint.loc[self.blueprint['record_id'] == row['record_id'], col] = row[col]
+    #                 elif pd.notnull(row[col]):
+    #                     # For repeated instances, we add a suffix based on redcap_repeat_instance
+    #                     suffix = suffix_separator + str(int(row['redcap_repeat_instance']))
+    #                     self.blueprint.loc[self.blueprint['record_id'] == row['record_id'], col + suffix] = row[col]
+
+    def update_blueprint_from_complete(self):
+        """Reads blueprint.xlsx and complete_dataframe.xlsx, and fills missing values in blueprint from complete_dataframe"""
+        blueprint_path = os.path.join(self.config.data_prepper.output_dir, 'blueprint.xlsx')
+        complete_dataframe_path = os.path.join(self.config.data_prepper.output_dir, 'complete_dataframe.xlsx')
+
+        # Load the blueprint and complete dataframe
+        blueprint_df = pd.read_excel(blueprint_path)
+        complete_df = pd.read_excel(complete_dataframe_path)
+
+        # Ensure they align on 'record_id' or the primary key column
+        common_cols = [col for col in blueprint_df.columns if col in complete_df.columns and col != 'record_id']
+
+        # Fill missing values in blueprint using values from complete_df
+        for col in common_cols:
+            blueprint_df[col] = blueprint_df[col].fillna(complete_df[col])
+
+        # Save the updated blueprint
+        blueprint_df.to_excel(blueprint_path, index=False)
+        logger.info(f"Updated blueprint saved to {blueprint_path}")
+
+        return blueprint_df
+        
