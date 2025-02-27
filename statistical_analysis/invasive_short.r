@@ -17,6 +17,7 @@ baseline <- readRDS(paste0(yaml$demographics$output_dir_data,"/baseline.rds"))
 
 baseline <- baseline %>%
   filter(record_id != 109) %>%
+  filter(caa_course___0 == "yes") %>%
   filter(!is.na(inv_ivusdobu_mla) & !is.na(inv_ffrdobu))
 
 baseline <- baseline %>%
@@ -291,6 +292,7 @@ plot_ffr_line <- ggpaired(ivus_df, ivus_df, x = "method", y = "value", color = "
 pressure_rest_ado_dobu <- create_boxplot(baseline, c("inv_rfr", "inv_ffrado", "inv_ffrdobu"), seq(0, 1, 0.1))
 ln_rest_ado_dobu <- create_boxplot(baseline, c("inv_ivusrest_mla_ln", "inv_ivusado_mla_ln", "inv_ivusdobu_mla_ln_any"), seq(0, 100, 10))
 
+ggsave(paste0(output_dir,"/plot_ffr_line.png"), plot_ffr_line, width = 4, height = 5)
 ggsave(paste0(output_dir,"/pressure_rest_ado_dobu.png"), pressure_rest_ado_dobu, width = 6, height = 5)
 ggsave(paste0(output_dir,"/ln_rest_ado_dobu.png"), ln_rest_ado_dobu, width = 6, height = 5)
 
@@ -327,7 +329,7 @@ mln_ffr <- ggplot(baseline, aes(x = inv_ivusrest_mla_ln, y = inv_ffrdobu)) +
   scale_color_gradient(low = "#070775", high = "#ff9100") +
   scale_size_manual(values = area_sizes) +
   labs(size = "MLA categories [mm²]") +
-  xlab("Minimal lumen narrowing [%]") +
+  xlab("Maximal lumen narrowing [%]") +
   ylab("FFR")
 
 mla_ellip_ffr <- ggplot(baseline, aes(x = inv_ivusrest_mla_ellip, y = inv_ffrdobu)) +
@@ -348,13 +350,19 @@ ggsave(paste0(output_dir,"/mln_ffr.png"), mln_ffr, width = 6, height = 5)
 ggsave(paste0(output_dir,"/mla_ellip_ffr.png"), mla_ellip_ffr, width = 6, height = 5)
 
 # Define the variables for comparison
-rest_vars <- c("inv_ffrado", 
+rest_vars <- c("inv_ffrado",
+                "pdpa_mean_ado",
+                "iFR_mean_rest",
+                "mid_systolic_ratio_mean_rest",
                 "inv_rest_hr", 
                 "inv_rest_aosys", 
                 "inv_rest_aodia",
                "inv_rest_aomean")
 
 dobu_vars <- c("inv_ffrdobu", 
+                "pdpa_mean_dobu",
+                "iFR_mean_dobu",
+                "mid_systolic_ratio_mean_dobu",
                 "inv_dobu_hr",
                "inv_dobu_aosys", 
                "inv_dobu_aodia", 
@@ -428,8 +436,52 @@ results_df <- do.call(rbind, results)
 # Print the results
 print(results_df)
 
+baseline <- baseline %>% mutate(
+  ffr_change = inv_ffrdobu - inv_ffrado,
+  inv_hr_change = inv_dobu_hr - inv_rest_hr,
+  inv_aosys_change = inv_dobu_aosys - inv_rest_aosys,
+  inv_aodia_change = inv_dobu_aodia - inv_rest_aodia,
+  inv_aomean_change = inv_dobu_aomean - inv_rest_aomean
+)
+
+relevant <- baseline %>% filter(inv_ffrdobu <= 0.8)
+nonrelevant <- baseline %>% filter(inv_ffrdobu > 0.8)
+
+inv_changes <- c( "ffr_change",
+"inv_hr_change",
+"inv_aosys_change",
+"inv_aodia_change",
+"inv_aomean_change")
+
+p_values <- data.frame(
+  Variable = c("FFR", "Heart rate", "Aortic systolic pressure", "Aortic diastolic pressure", "Aortic mean pressure"),
+  Test = NA,
+  P_Value = NA
+)
+
+for (i in 1:length(inv_changes)) {
+  if (shapiro.test(relevant[[inv_changes[i]]])$p.value > 0.05 & shapiro.test(nonrelevant[[inv_changes[i]]])$p.value > 0.05) {
+    p_value <- t.test(relevant[[inv_changes[i]]], nonrelevant[[inv_changes[i]]], paired = FALSE)$p.value
+    p_values$Test[i] <- "t-test"
+    p_values$P_Value[i] <- p_value
+  } else {
+    p_value <- wilcox.test(relevant[[inv_changes[i]]], nonrelevant[[inv_changes[i]]], paired = FALSE)$p.value
+    p_values$Test[i] <- "Wilcoxon"
+    p_values$P_Value[i] <- p_value
+  }
+}
+
+# adjust p-values
+p_values$P_Value <- p.adjust(p_values$P_Value, method = "fdr")
+
+results_list <- list(
+  "Invasive Changes" = results_df,
+  "P-Values" = p_values
+)
+
 # Optionally, save the results to a CSV file
-write.csv(results_df, "statistical_analysis/data/invasive_change.csv", row.names = FALSE)
+write_xlsx(results_list, "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis_team/statistical_analysis/data/invasive_change.xlsx")
+
 
 # baseline IVUS variables to predict FFR change
 ivus_vars <- c("inv_ivusrest_mla", 
@@ -446,7 +498,7 @@ results_list <- list(
 )
 
 # Write the list of data frames to an Excel file
-write_xlsx(results_list, "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/statistical_analysis/data/ivus_logistic_regression_results.xlsx")
+write_xlsx(results_list, "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis_team/statistical_analysis/data/ivus_logistic_regression_results.xlsx")
 
 ######### ROC analysis for IVUS variables ###############################################################
 # Perform ROC analysis for all the specified response variables
@@ -460,7 +512,7 @@ roc_results_list <- list(
 )
 
 # Write the list of data frames to an Excel file
-write_xlsx(roc_results_list, "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/statistical_analysis/data/ivus_roc_analysis_results.xlsx")
+write_xlsx(roc_results_list, "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis_team/statistical_analysis/data/ivus_roc_analysis_results.xlsx")
 
 ############################################################################################################
 # best cutoffs
@@ -584,26 +636,37 @@ for (i in 1:length(thresholds)) {
 }
 
 # Save all as CSV
-path <- "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/statistical_analysis/data/"
+path <- "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis_team/statistical_analysis/data/"
 for (i in 1:length(cutoff_tables)) {
   name <- variables[i]
   table <- cutoff_tables[[i]]
   write_csv(table, paste0(path, name, ".csv"))
 }
 
-roc_list_mla <- list(roc_mla, roc_mla_ln, roc_mla_ellip)
+roc_list_mla <- list(roc_mla_ln, roc_mla_ellip)
 ggroc_mla <- ggroc(roc_list_mla, legacy.axes = TRUE) +
-    scale_color_manual(values = c("darkred", "darkblue", "darkgreen")) +
+    scale_color_manual(values = c("darkblue", "darkred")) +
+    scale_linetype_manual(values = c("solid", "dashed", "dotted")) +
+    theme(legend.position = "none") +
+    geom_abline(intercept = 0, slope = 1, linetype = "dashed") +
+    ggtitle("Minimal lumen") +
+    theme_classic() + 
+    annotate("text", x = 0.7, y = 0.2, label = paste("AUC MLN =", round(roc_mla_ln$auc, 2)), color = "darkblue") +
+    annotate("text", x = 0.7, y = 0.1, label = paste("AUC elliptic ratio =", round(roc_mla_ellip$auc, 2)), color = "darkred")
+
+roc_list_ffr <- list(roc_mla, roc_ffrado)
+ggroc_ffr <- ggroc(roc_list_ffr, legacy.axes = TRUE) +
+    scale_color_manual(values = c("darkred", "darkblue")) +
     scale_linetype_manual(values = c("solid", "dashed", "dotted")) +
     theme(legend.position = "none") +
     geom_abline(intercept = 0, slope = 1, linetype = "dashed") +
     ggtitle("Minimal lumen") +
     theme_classic() + 
     annotate("text", x = 0.7, y = 0.3, label = paste("AUC MLA =", round(roc_mla$auc, 2)), color = "darkred") + 
-    annotate("text", x = 0.7, y = 0.2, label = paste("AUC MLN =", round(roc_mla_ln$auc, 2)), color = "darkblue") +
-    annotate("text", x = 0.7, y = 0.1, label = paste("AUC elliptic ratio =", round(roc_mla_ellip$auc, 2)), color = "darkgreen")
+    annotate("text", x = 0.7, y = 0.2, label = paste("AUC FFRAdenosine =", round(roc_ffrado$auc, 2)), color = "darkblue")
 
-ggsave(paste0(output_dir,"/roc_mla.png"), ggroc_mla, width = 6, height = 5)
+ggsave(paste0(output_dir,"/roc_ivus.png"), ggroc_mla, width = 6, height = 5)
+ggsave(paste0(output_dir,"/roc_ffrado.png"), ggroc_ffr, width = 6, height = 5)
 
 shapiro.test(baseline$inv_rfr)
 median(baseline$inv_rfr, na.rm = T)
@@ -637,7 +700,7 @@ quantile(baseline$inv_ivusdobu_mla_ln_any, c(0.25, 0.75), na.rm = T)
 cross <- baseline %>% drop_na(ffr_0.8, all_of(ivus_vars))
 cross$ffr_0.8 <- factor(cross$ffr_0.8, levels = c(0, 1), labels = c("Class0", "Class1"))
 
-# Create a list of 50 seeds
+# Create a list of seeds
 set.seed(69)
 seeds <- sample(1:1000, 100)
 
@@ -647,8 +710,8 @@ results_list <- list()
 train_and_evaluate <- function(seed) {
   set.seed(seed)
   
-  # Split the data into training (80%) and testing (20%) sets
-  train_indices <- createDataPartition(cross$ffr_0.8, p = 0.78, list = FALSE)
+  # Split the data into training (78%) and testing (22%) sets --> 44/12 patients
+  train_indices <- createDataPartition(cross$ffr_0.8, p = 0.78, list = FALSE) # automatically stratified
   train_data <- cross[train_indices, ]
   test_data <- cross[-train_indices, ]
   
@@ -894,7 +957,7 @@ roc_summary_df_ffr0.8_rounded <- roc_summary_df_ffr0.8 %>%
 print(roc_summary_df_ffr0.8_rounded)
 
 # Save the rounded summary dataframe to an Excel file
-write_xlsx(roc_summary_df_ffr0.8_rounded, "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/statistical_analysis/data/roc_summary_ffr0.8_rounded_summary.xlsx")
+write_xlsx(roc_summary_df_ffr0.8_rounded, "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis_team/statistical_analysis/data/roc_summary_ffr0.8_rounded_summary.xlsx")
 
 
 ############################################################################################################
@@ -929,7 +992,7 @@ forest_df_bsa <- data.frame(
     var = c(
             "Minimal lumen area",
             "Minimal lumen elliptic ratio",
-            "Minimal lumen narrowing [%]", 
+            "Maximal lumen narrowing [%]", 
             "FFR adenosine"
             ),
     odds_ratio = c(
@@ -963,10 +1026,10 @@ forest_ffr_0.8 <- ggplot(data = forest_cut, aes(y = var, x = odds_ratio, xmin = 
     scale_x_continuous(breaks = seq(0, 6, 0.5), labels = parse(text = seq(0, 6, 0.5))) +
     theme_classic()
 
-ggsave("C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/statistical_analysis/figures/forest_ffr_0.8.png", forest_ffr_0.8, width = 5, height = 2)
+ggsave("C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis_team/statistical_analysis/figures/forest_ffr_0.8.png", forest_ffr_0.8, width = 5, height = 2)
 
 cross <- baseline %>% drop_na(ffr_0.8, all_of(ivus_vars))
-cross <- cross %>% select(-inv_ffrado)
+# cross <- cross %>% select(-inv_ffrado)
 cross$ffr_0.8 <- factor(cross$ffr_0.8, levels = c(0, 1), labels = c("Class0", "Class1"))
 
 set.seed(69)
@@ -1098,7 +1161,7 @@ ggplot(convergence_results, aes(x = Seed, y = Mean_AUC, color = Variable)) +
   theme_classic()
 
 # Save the plot
-ggsave("C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis/statistical_analysis/figures/auc_convergence.png", width = 6, height = 4)
+ggsave("C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis_team/statistical_analysis/figures/auc_convergence.png", width = 6, height = 4)
 
 above0.8 <- baseline %>% filter(inv_ffrdobu > 0.8)
 below0.8 <- baseline %>% filter(inv_ffrdobu <= 0.8)
@@ -1125,9 +1188,14 @@ treatment <- baseline %>% filter(synp_surgery == "yes" | synp_stent == "yes")
 
 median(no_treatment$inv_ffrdobu, na.rm = T)
 quantile(no_treatment$inv_ffrdobu, c(0.25, 0.75), na.rm = T)
+min(no_treatment$inv_ffrdobu, na.rm = T)
+max(no_treatment$inv_ffrdobu, na.rm = T)
 
+treatment <- treatment %>% filter(inv_ffrdobu <= 0.8)
 median(treatment$inv_ffrdobu, na.rm = T)
 quantile(treatment$inv_ffrdobu, c(0.25, 0.75), na.rm = T)
+min(treatment$inv_ffrdobu, na.rm = T)
+max(treatment$inv_ffrdobu, na.rm = T)
 
 wilcox.test(no_treatment$inv_ffrdobu, treatment$inv_ffrdobu, paired = F)
 
@@ -1137,4 +1205,199 @@ test %>% filter(inv_ffrado <= 0.8)
 
 test %>% filter(inv_ffrado > 0.8) %>% print(n = 50)
 
-test %>% filter(inv_ffrado >0.8 & inv_ffrdobu <= 0.8)
+test %>% filter(inv_ffrado > 0.8 & inv_ffrdobu <= 0.8)
+
+chisq.test(table(above0.8$inv_access_init___0), table(below0.8$inv_access_init___0))
+
+# invasive changes above0.8
+# Define the variables for comparison
+rest_vars <- c("inv_ffrado", 
+                "inv_rest_hr", 
+                "inv_rest_aosys", 
+                "inv_rest_aodia",
+               "inv_rest_aomean")
+
+dobu_vars <- c("inv_ffrdobu", 
+                "inv_dobu_hr",
+               "inv_dobu_aosys", 
+               "inv_dobu_aodia", 
+               "inv_dobu_aomean")
+
+# Initialize a list to store results
+results <- list()
+
+# Loop over variables to perform the tests and compute statistics
+for (i in 1:length(rest_vars)) {
+  rest_var <- rest_vars[i]
+  dobu_var <- dobu_vars[i]
+  
+  # Initialize variables to store test results
+  rest_summary <- ""
+  dobu_summary <- ""
+  test_method <- ""
+  p_value <- NA
+  
+  # Try performing Shapiro-Wilk test
+  tryCatch({
+    rest_shapiro <- shapiro.test(as.numeric(above0.8[[rest_var]]))
+    dobu_shapiro <- shapiro.test(as.numeric(above0.8[[dobu_var]]))
+    
+    # Check for normality
+    if (rest_shapiro$p.value > 0.05 && dobu_shapiro$p.value > 0.05) {
+      # Both variables are normally distributed, use paired t-test
+      test_result <- t.test(above0.8[[rest_var]], above0.8[[dobu_var]], paired = TRUE)
+      # Compute mean ± SD
+      rest_mean <- mean(above0.8[[rest_var]], na.rm = TRUE)
+      rest_sd <- sd(above0.8[[rest_var]], na.rm = TRUE)
+      dobu_mean <- mean(above0.8[[dobu_var]], na.rm = TRUE)
+      dobu_sd <- sd(above0.8[[dobu_var]], na.rm = TRUE)
+      rest_summary <- sprintf("%.2f ± %.2f", rest_mean, rest_sd)
+      dobu_summary <- sprintf("%.2f ± %.2f", dobu_mean, dobu_sd)
+      test_method <- "t-test"
+    } else {
+      # Use Wilcoxon signed-rank test
+      test_result <- wilcox.test(above0.8[[rest_var]], above0.8[[dobu_var]], paired = TRUE)
+      # Compute median (Q1 - Q3)
+      rest_median <- median(above0.8[[rest_var]], na.rm = TRUE)
+      rest_q1 <- quantile(above0.8[[rest_var]], 0.25, na.rm = TRUE)
+      rest_q3 <- quantile(above0.8[[rest_var]], 0.75, na.rm = TRUE)
+      dobu_median <- median(above0.8[[dobu_var]], na.rm = TRUE)
+      dobu_q1 <- quantile(above0.8[[dobu_var]], 0.25, na.rm = TRUE)
+      dobu_q3 <- quantile(above0.8[[dobu_var]], 0.75, na.rm = TRUE)
+      rest_summary <- sprintf("%.2f (%.2f-%.2f)", rest_median, rest_q1, rest_q3)
+      dobu_summary <- sprintf("%.2f (%.2f-%.2f)", dobu_median, dobu_q1, dobu_q3)
+      test_method <- "Wilcoxon"
+    }
+    p_value <- test_result$p.value
+  }, error = function(e) {
+    # Fill in blank line if error occurs
+    rest_var <- ""
+    dobu_var <- ""
+  })
+  
+  # Store results
+  results[[i]] <- data.frame(
+    Variable = rest_var,
+    Rest_Summary = rest_summary,
+    Dobu_Summary = dobu_summary,
+    Test = test_method,
+    P_Value = round(p_value,3)
+  )
+}
+
+# Combine results into a single data frame
+results_df <- do.call(rbind, results)
+
+# Print the results
+print(results_df)
+
+# Optionally, save the results to a CSV file
+write.csv(results_df, "statistical_analysis/data/invasive_change_above0.8.csv", row.names = FALSE)
+
+# invasive changes below0.8
+# Define the variables for comparison
+rest_vars <- c("inv_ffrado", 
+                "inv_rest_hr", 
+                "inv_rest_aosys", 
+                "inv_rest_aodia",
+               "inv_rest_aomean")
+
+dobu_vars <- c("inv_ffrdobu", 
+                "inv_dobu_hr",
+               "inv_dobu_aosys", 
+               "inv_dobu_aodia", 
+               "inv_dobu_aomean")
+
+# Initialize a list to store results
+results <- list()
+
+# Loop over variables to perform the tests and compute statistics
+for (i in 1:length(rest_vars)) {
+  rest_var <- rest_vars[i]
+  dobu_var <- dobu_vars[i]
+  
+  # Initialize variables to store test results
+  rest_summary <- ""
+  dobu_summary <- ""
+  test_method <- ""
+  p_value <- NA
+  
+  # Try performing Shapiro-Wilk test
+  tryCatch({
+    rest_shapiro <- shapiro.test(as.numeric(below0.8[[rest_var]]))
+    dobu_shapiro <- shapiro.test(as.numeric(below0.8[[dobu_var]]))
+    
+    # Check for normality
+    if (rest_shapiro$p.value > 0.05 && dobu_shapiro$p.value > 0.05) {
+      # Both variables are normally distributed, use paired t-test
+      test_result <- t.test(below0.8[[rest_var]], below0.8[[dobu_var]], paired = TRUE)
+      # Compute mean ± SD
+      rest_mean <- mean(below0.8[[rest_var]], na.rm = TRUE)
+      rest_sd <- sd(below0.8[[rest_var]], na.rm = TRUE)
+      dobu_mean <- mean(below0.8[[dobu_var]], na.rm = TRUE)
+      dobu_sd <- sd(below0.8[[dobu_var]], na.rm = TRUE)
+      rest_summary <- sprintf("%.2f ± %.2f", rest_mean, rest_sd)
+      dobu_summary <- sprintf("%.2f ± %.2f", dobu_mean, dobu_sd)
+      test_method <- "t-test"
+    } else {
+      # Use Wilcoxon signed-rank test
+      test_result <- wilcox.test(below0.8[[rest_var]], below0.8[[dobu_var]], paired = TRUE)
+      # Compute median (Q1 - Q3)
+      rest_median <- median(below0.8[[rest_var]], na.rm = TRUE)
+      rest_q1 <- quantile(below0.8[[rest_var]], 0.25, na.rm = TRUE)
+      rest_q3 <- quantile(below0.8[[rest_var]], 0.75, na.rm = TRUE)
+      dobu_median <- median(below0.8[[dobu_var]], na.rm = TRUE)
+      dobu_q1 <- quantile(below0.8[[dobu_var]], 0.25, na.rm = TRUE)
+      dobu_q3 <- quantile(below0.8[[dobu_var]], 0.75, na.rm = TRUE)
+      rest_summary <- sprintf("%.2f (%.2f-%.2f)", rest_median, rest_q1, rest_q3)
+      dobu_summary <- sprintf("%.2f (%.2f-%.2f)", dobu_median, dobu_q1, dobu_q3)
+      test_method <- "Wilcoxon"
+    }
+    p_value <- test_result$p.value
+  }, error = function(e) {
+    # Fill in blank line if error occurs
+    rest_var <- ""
+    dobu_var <- ""
+  })
+  
+  # Store results
+  results[[i]] <- data.frame(
+    Variable = rest_var,
+    Rest_Summary = rest_summary,
+    Dobu_Summary = dobu_summary,
+    Test = test_method,
+    P_Value = round(p_value,3)
+  )
+}
+
+# Combine results into a single data frame
+results_df <- do.call(rbind, results)
+
+# Print the results
+print(results_df)
+
+# Optionally, save the results to a CSV file
+write.csv(results_df, "statistical_analysis/data/invasive_change_below0.8.csv", row.names = FALSE)
+
+graphical_mla <- ggroc(roc_mla, legacy.axes = TRUE, color = "black") +
+    scale_linetype_manual(values = c("solid", "dashed", "dotted")) +
+    theme(legend.position = "none") +
+    geom_abline(intercept = 0, slope = 1, linetype = "dashed") +
+    ggtitle("Minimal lumen area [mm²]") +
+    theme_classic() + 
+    annotate("text", x = 0.7, y = 0.3, label = paste("AUC =", round(roc_mla$auc, 2)), color = "black")
+
+graphical_ffr <- ggroc(roc_ffrado, legacy.axes = TRUE, color = "black") +
+    scale_linetype_manual(values = c("solid", "dashed", "dotted")) +
+    theme(legend.position = "none") +
+    geom_abline(intercept = 0, slope = 1, linetype = "dashed") +
+    ggtitle("FFRadenosine") +
+    theme_classic() + 
+    annotate("text", x = 0.7, y = 0.3, label = paste("AUC =", round(roc_ffrado$auc, 2)), color = "black")
+
+ggsave(paste0(output_dir,"/graphical_mla.png"), graphical_mla, width = 2.5, height = 2.5)
+ggsave(paste0(output_dir,"/graphical_ffr.png"), graphical_ffr, width = 2.5, height = 2.5)
+
+test <- baseline %>% select(record_id, ffr_0.8, inv_ivusrest_mla, inv_ffrado)
+
+write.csv(test, "C:/WorkingData/Documents/2_Coding/Python/NARCO_analysis_team/statistical_analysis/data/test.csv", row.names = FALSE)
